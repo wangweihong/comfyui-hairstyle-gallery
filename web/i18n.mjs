@@ -131,7 +131,50 @@
   "宽度": "Width",
   "高度": "Height",
   "名称": "Name",
-  "描述": "Description"
+  "描述": "Description",
+  "上传发型": "Upload hairstyle",
+  "浏览内置假人发型，或上传自己的发型参考。": "Browse built-in mannequin hairstyles or upload your own hairstyle reference.",
+  "可用发型": "Available hairstyles",
+  "内置": "Built-in",
+  "自定义": "Custom",
+  "全部来源": "All sources",
+  "未分类": "Unspecified",
+  "素材来源": "Asset source",
+  "按发长速览": "Quick preview by length",
+  "本地素材 · 按入库顺序": "Local assets · Catalog order",
+  "内置库未安装，可上传自定义发型继续使用。": "The built-in library is not installed. Upload custom hairstyles to continue.",
+  "内置 {builtin} · 自定义 {user}": "Built-in {builtin} · Custom {user}",
+  "张可用参考 · 内置": "available references · Built-in",
+  "/ 自定义": "/ Custom",
+  "直接导入图片，不自动提取头发或去除人物面部。": "Images are imported directly. Hair extraction and face removal are not performed.",
+  "支持静态 PNG、JPEG、WebP；单张不超过 20 MiB、3200 万像素。": "Static PNG, JPEG, or WebP. Up to 20 MiB and 32 megapixels per image.",
+  "选择图片": "Choose image",
+  "尚未选择图片": "No image selected",
+  "待上传发型预览": "Preview of the hairstyle to upload",
+  "名称（必填）": "Name (required)",
+  "中文名称（必填）": "Chinese name (required)",
+  "英文名称（必填）": "English name (required)",
+  "中文名称（可选）": "Chinese name (optional)",
+  "英文名称（可选）": "English name (optional)",
+  "取消": "Cancel",
+  "保存到图库": "Save to gallery",
+  "正在保存…": "Saving…",
+  "请选择一张图片。": "Choose an image.",
+  "每次只能上传一张图片。": "Upload one image at a time.",
+  "图片超过 20 MiB 限制。": "The image exceeds the 20 MiB limit.",
+  "图片超过 3200 万像素限制。": "The image exceeds the 32-megapixel limit.",
+  "仅支持静态 PNG、JPEG、WebP 图片。": "Only static PNG, JPEG, and WebP images are supported.",
+  "暂不支持动画图片。": "Animated images are not supported.",
+  "图片损坏或无法读取，请重新选择。": "The image is damaged or cannot be read. Choose another image.",
+  "文件名无效，请重命名后重试。": "The filename is invalid. Rename the file and try again.",
+  "请填写名称。": "Enter a name.",
+  "请检查名称和发长选项，名称最多 120 个字符。": "Check the name and hair length. Names are limited to 120 characters.",
+  "上传请求无效，请重新选择图片后重试。": "Invalid upload request. Select the image again and retry.",
+  "无法保存到用户素材目录，请检查写入权限后重试。": "Cannot save to the user library. Check write permissions and retry.",
+  "上传失败，请重试。": "Upload failed. Please retry.",
+  "发型已保存，可点击“使用此发型”写回节点。": "Saved. Click “Use hairstyle” to update the node.",
+  "自定义上传，没有原始日文名称。": "Custom upload; no original Japanese name.",
+  "用户上传：{filename}\n上传时间：{time}": "User upload: {filename}\nUploaded at: {time}"
 };
   const LANGUAGE_KEY='hairstyle-gallery-language';
   const normalize=value=>value==='en'?'en':'zh';
@@ -152,7 +195,7 @@
       const node=walker.currentNode;
       if(!['SCRIPT','STYLE'].includes(node.parentElement?.tagName)&&!node.parentElement?.closest('#language, #viewer-language')&&EN[node.nodeValue.trim()])texts.push([node,node.nodeValue]);
     }
-    for(const el of body.querySelectorAll('*'))for(const key of ['aria-label','placeholder','title']){
+    for(const el of body.querySelectorAll('*'))for(const key of ['aria-label','placeholder','title','alt']){
       const value=el.getAttribute(key);if(value&&EN[value])attrs.push([el,key,value]);
     }
     const originalTitle=document.title;

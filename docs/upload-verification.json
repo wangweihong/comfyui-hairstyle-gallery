@@ -1,0 +1,88 @@
+{
+  "api_validation": [
+    {
+      "case": "invalid image",
+      "http_status": 400,
+      "error": "invalid_image"
+    },
+    {
+      "case": "two images",
+      "http_status": 400,
+      "error": "single_image_only"
+    },
+    {
+      "case": "unsafe filename",
+      "http_status": 400,
+      "error": "invalid_filename"
+    },
+    {
+      "case": "missing image",
+      "http_status": 400,
+      "error": "image_required"
+    },
+    {
+      "case": "over 20 MiB",
+      "http_status": 413,
+      "error": "file_too_large"
+    }
+  ],
+  "custom_id": "u-a540ce3791044813a05bc94a89a559de",
+  "builtin_count": 893,
+  "user_count": 1,
+  "storage": "/home/wwhvw/.local/share/comfyui-custom/tests/cu130-megapak-pt211/storage-user/user-profile/hairstyle_gallery",
+  "source_id": "",
+  "single_upload_form": true,
+  "cancel_without_commit": true,
+  "english_form_saved": true,
+  "restart_persistence": true,
+  "animated_upload_rejected_in_ui": true,
+  "retry_form_keeps_fields": true,
+  "no_jobs_queued_by_upload": true,
+  "node_outputs": {
+    "7": {
+      "text": [
+        "短发发型"
+      ]
+    },
+    "5": {
+      "text": [
+        "Unspecified"
+      ]
+    },
+    "4": {
+      "text": [
+        "Custom hairstyle / Unspecified / Custom sample: Mini bob"
+      ]
+    },
+    "3": {
+      "text": [
+        "Custom sample: Mini bob"
+      ]
+    },
+    "6": {
+      "text": [
+        ""
+      ]
+    }
+  },
+  "legacy_default_chinese": true,
+  "node_prompt_id": "5def8d0d-797a-4c38-ac8d-2144ee71d0b7",
+  "node_ui_writeback": true,
+  "no_jobs_queued_by_selection": true,
+  "custom_viewer_omits_japanese_source": true,
+  "python_tests_passed": 17,
+  "javascript_core_and_i18n_passed": true,
+  "desktop_form_preview_verified": true,
+  "mobile_viewport_verified": true,
+  "screenshots": [
+    "docs/custom-upload-form.png",
+    "docs/custom-upload-selected.png",
+    "docs/custom-upload-mobile.png",
+    "docs/custom-upload-mobile-form.png"
+  ],
+  "mobile_gallery_width": 390,
+  "mobile_gallery_scroll_width": 390,
+  "mobile_upload_dialog_width": 329,
+  "mobile_upload_dialog_client_width": 312,
+  "mobile_upload_dialog_scroll_width": 312
+}

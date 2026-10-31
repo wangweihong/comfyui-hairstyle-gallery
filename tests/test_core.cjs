@@ -12,3 +12,11 @@ assert.equal(filterRecords(rows,{favorites:true},new Set(['h-f1']))[0].id,'h-f1'
 assert.equal(filterRecords(rows,{sort:'size'})[0].id,'h-f2');
 assert.equal(readState('#sec=face&hair=invalid&sort=invalid',rows).section,'all');
 console.log('Gallery search, filters, favorites, sorting and URL parsing passed.');
+const mixed=[...rows.map(r=>({...r,origin:'builtin'})),{id:'u-test',section:'hairstyle',origin:'user',hair:'unknown',style:'',search:'u-test custom uploaded bangs 自定义刘海',w:80,h:120}];
+assert.equal(filterRecords(mixed,{origin:'user'})[0].id,'u-test');
+assert.equal(filterRecords(mixed,{origin:'builtin'}).length,2);
+assert.equal(filterRecords(mixed,{origin:'user',hair:'unknown',q:'custom 刘海'}).length,1);
+assert.equal(readState('#origin=user&hair=unknown',mixed).origin,'user');
+assert.equal(readState('#origin=user&hair=unknown',mixed).hair,'unknown');
+assert.equal(readState('#origin=invalid',mixed).origin,'all');
+console.log('Built-in/custom source filters and unspecified hair length passed.');

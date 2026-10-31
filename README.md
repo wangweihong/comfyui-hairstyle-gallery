@@ -27,6 +27,35 @@ python -m pip install -r comfyui-hairstyle-gallery/requirements.txt
 
 默认读取节点目录的 `library/`。本机数据实际位于 `/media/wwhvw/备份/comfyui/发型/`，本机安装与容器可访问的图片使用硬链接共享，不复制整套图库。仓库自带可直接使用的 `library/`；也可通过环境变量 `COMFYUI_HAIRSTYLE_GALLERY_LIBRARY` 指向容器内可见的完整素材库路径。
 
+## 单张上传自定义发型
+
+1. 在独立图库或节点打开的图库中点击 **上传发型**。
+2. 选择一张现成的发型参考图，查看预览，填写当前界面语言的名称；另一语言名称可选。发长默认为 **未分类**。
+3. 点击 **保存到图库**。成功后会切换到“自定义”视图、清除当前筛选并打开新图的大图。
+4. 点击 **使用此发型 → ComfyUI** 写回当前节点。上传和选择都不会自动运行工作流。
+
+支持静态 PNG、JPEG、WebP，每次一张，最大20 MiB、3200万像素。图片按实际内容校验，完整图转换为PNG并保留原尺寸与透明度，预览和缩略图使用白色背景。上传仅导入图片，**不会自动提取头发或去除人物面部**。首版不包含批量、编辑、删除或自动提取。
+
+自定义素材默认保存在 **`ComfyUI/user/hairstyle_gallery/`**，不写入节点代码或内置库：
+
+```text
+user/hairstyle_gallery/
+  data/custom.json   自定义名称、来源文件名、发长、尺寸和上传时间
+  img/full/          完整PNG
+  img/preview/       800×1000内WebP
+  img/thumb/         400×500内WebP
+```
+
+升级或替换节点代码不会覆盖此目录；备份时请单独备份它。本地ComfyUI服务中的客户端共享此素材库，不按浏览器或账号隔离。可通过 `COMFYUI_HAIRSTYLE_GALLERY_USER_LIBRARY` 指向其他持久化、可写、容器内可见的目录。
+
+图库新增 **全部来源 / 内置 / 自定义** 筛选，并分别统计数量。内置索引缺失时仍能上传和使用自定义素材。自定义编号为 `u-` 加UUID，`source_id` 输出为空；自定义英文名优先使用用户填写的内容，未填写另一语言时显示已有名称，不自动翻译。
+
+接口：`POST /hairstyle_gallery/upload`，multipart字段为 `image`、`name`、可选 `other_name`、`language`（zh/en）、`hair`（unknown/short/medium/medium-long/long）。成功返回201及 `record`、更新后的 `catalog`；失败返回带错误代码的JSON，不写入半成品。原有目录接口仍返回数组，通过 `origin=builtin/user` 区分，图片接口仍只读取登记的编号。
+
+![上传预览与中英文名称表单](docs/custom-upload-form.png)
+
+![在节点图库中选择自定义发型](docs/custom-upload-selected.png)
+
 ## 中英文切换
 
 - 节点浏览按钮旁的 **English / 中文** 按钮可切换当前节点和内嵌图库；图库右上角也可选择语言。
@@ -42,13 +71,13 @@ python -m pip install -r comfyui-hairstyle-gallery/requirements.txt
 
 | 输出 | 内容 |
 | --- | --- |
-| image | 完整 RGB PNG 假人发型图，原始生成尺寸 |
+| image | 完整 RGB 发型参考图，保留原图尺寸；透明部分使用白色背景 |
 | width / height | 图像宽高 |
-| hairstyle_id | 本库ID，`h-`加来源人像ID |
+| hairstyle_id | 内置ID为`h-`加来源人像ID；自定义ID为`u-`加UUID |
 | name | 根据语言输出中文或英文发型名称 |
-| description | 当前语言的假人发型、长度与风格描述 |
-| hair_length | 当前语言的短发、中发、中长发或长发类别 |
-| source_id | 原始正脸素材ID |
+| description | 当前语言的参考类型、长度与风格描述 |
+| hair_length | 当前语言的短发、中发、中长发、长发或未分类 |
+| source_id | 内置素材的原始正脸ID；自定义素材为空字符串 |
 
 `example_workflows/hairstyle_gallery_preview.json` 可直接导入，预览并保存选中的发型图。生成流程为 `example_workflows/flux-klein-hairstyle.json`，附同名API图；复现生成需要安装Portrait Gallery、LayerStyle及原工作流模型。
 

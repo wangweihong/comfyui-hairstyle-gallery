@@ -1,7 +1,7 @@
 (function () {
   'use strict';
-  const {records, meta, ranking} = window.HAIRSTYLE_DATA;
-  const {filterRecords, readState, sectionLabels, hairLabels} = window.HairstyleCore;
+  let {records, meta, ranking} = window.HAIRSTYLE_DATA;
+  const {filterRecords, readState, sectionLabels, hairLabels, originLabels} = window.HairstyleCore;
   const $ = selector => document.querySelector(selector);
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const I18N=window.HairstyleI18n;
@@ -49,6 +49,7 @@
   function writeURL(id = '') {
     const p = new URLSearchParams();
     if (state.section !== 'all') p.set('sec', state.section);
+    if (state.origin && state.origin !== 'all') p.set('origin',state.origin);
     if (state.hair) p.set('hair', state.hair);
     if (state.style) p.set('style', state.style);
     if (state.q) p.set('q', state.q);
@@ -74,6 +75,7 @@
   function renderControls() {
     $('#section-tabs').innerHTML = ['all'].map(section => `<button id="tab-${section}" type="button" role="tab" class="section-tab" data-section="${section}" aria-controls="grid" aria-selected="${state.section===section}" tabindex="${state.section===section?0:-1}">${t(sectionLabels[section])} <small>${fmt(section==='all'?meta.total:meta.sections[section])}</small></button>`).join('');
     $('#grid').setAttribute('aria-labelledby', 'tab-' + state.section);
+    $('#origin-filters').innerHTML=Object.entries(originLabels).map(([key,label])=>`<button type="button" data-origin="${key}" aria-pressed="${state.origin===key}">${t(label)} <small>${fmt(key==='all'?meta.total:key==='builtin'?meta.builtin_count:meta.user_count)}</small></button>`).join('');
     const base = filterRecords(records, {...state, hair:'', style:''}, favorites);
     $('#hair-filters').innerHTML = [['','全部发型'], ...Object.entries(hairLabels)].map(([hair,label]) => `<button type="button" class="hair-chip" data-hair="${escape(hair)}" aria-pressed="${state.hair===hair}">${t(label)}<small>${fmt(hair ? base.filter(item=>item.hair===hair).length : base.length)}</small></button>`).join('');
     const styleBase = filterRecords(records, {...state, style:'', q:''}, favorites);
@@ -85,7 +87,7 @@
     $('#favorite-filter').innerHTML=icon('heart')+' '+t('我的收藏')+' <span id="favorite-count">'+favorites.size+'</span>';
     $('#favorite-filter').setAttribute('aria-pressed', String(state.favorites));
     $('#section-note').textContent = t('由正脸参考提取的假人发型；人物身份与发型分开参考');
-    const active = [['hair',state.hair && t(hairLabels[state.hair])], ['style',state.style && title(records.find(item=>item.style===state.style))], ['q',state.q && t('搜索：{query}',{query:state.q})], ['favorites',state.favorites && t('我的收藏')]].filter(([,value])=>value);
+    const active = [['origin',state.origin!=='all'&&t(originLabels[state.origin])], ['hair',state.hair && t(hairLabels[state.hair])], ['style',state.style && title(records.find(item=>item.style===state.style))], ['q',state.q && t('搜索：{query}',{query:state.q})], ['favorites',state.favorites && t('我的收藏')]].filter(([,value])=>value);
     $('#active-filters').innerHTML = active.map(([key,value])=>`<button type="button" class="active-chip" data-clear="${key}" aria-label="${escape(t('移除筛选：{value}',{value}))}">${escape(value)}<span aria-hidden="true">×</span></button>`).join('');
     const n = active.length;
     $('#filter-toggle').innerHTML = icon('sliders') + ' '+t('筛选') + (n ? ` (${n})` : '');
@@ -119,7 +121,7 @@
     renderControls();showMore();
     if (updateURL) writeURL(viewer.open && viewerList[viewerIndex] ? viewerList[viewerIndex].id : '');
   }
-  function reset() {clearTimeout(searchTimer);Object.assign(state,{section:'all',hair:'',style:'',q:'',favorites:false,sort:'default'});render();}
+  function reset() {clearTimeout(searchTimer);Object.assign(state,{section:'all',origin:'all',hair:'',style:'',q:'',favorites:false,sort:'default'});render();}
   function setSection(section) {state.section=section;state.style='';render();}
   $('#section-tabs').addEventListener('click',event=>{const button=event.target.closest('[data-section]');if(button)setSection(button.dataset.section);});
   $('#section-tabs').addEventListener('keydown',event=>{
@@ -128,13 +130,14 @@
     const next=event.key==='Home'?0:event.key==='End'?0:0;
     setSection(sections[next]);$('#tab-'+sections[next]).focus();
   });
+  $('#origin-filters').addEventListener('click',event=>{const button=event.target.closest('[data-origin]');if(button){state.origin=button.dataset.origin;render();}});
   $('#hair-filters').addEventListener('click',event=>{const button=event.target.closest('[data-hair]');if(button){state.hair=button.dataset.hair;state.style='';render();}});
   $('#style-filter').addEventListener('change',event=>{state.style=event.target.value;render();});
   $('#sort').addEventListener('change',event=>{state.sort=event.target.value;render();});
   let searchTimer;
   $('#search').addEventListener('input',event=>{const value=event.target.value;clearTimeout(searchTimer);searchTimer=setTimeout(()=>{state.q=value.trim();render();},120);});
   $('#reset').addEventListener('click',reset);$('#empty-reset').addEventListener('click',reset);
-  $('#active-filters').addEventListener('click',event=>{const button=event.target.closest('[data-clear]');if(button){state[button.dataset.clear]=button.dataset.clear==='favorites'?false:'';if(button.dataset.clear==='hair')state.style='';render();}});
+  $('#active-filters').addEventListener('click',event=>{const button=event.target.closest('[data-clear]');if(button){state[button.dataset.clear]=button.dataset.clear==='favorites'?false:'';if(button.dataset.clear==='hair')state.style='';if(button.dataset.clear==='origin')state.origin='all';render();}});
   $('#favorite-filter').addEventListener('click',()=>{state.favorites=!state.favorites;render();});
   $('#filter-toggle').addEventListener('click',()=>{const open=$('#filter-toggle').getAttribute('aria-expanded')!=='true';$('#filter-toggle').setAttribute('aria-expanded',String(open));$('#filter-panel').classList.toggle('is-open',open);});
   $('#more').addEventListener('click',showMore);
@@ -174,8 +177,10 @@
     $('#viewer-section').textContent=section(item)+' / HAIRSTYLE REFERENCE';
     $('#viewer-title').textContent=title(item);$('#viewer-id').textContent=item.id;
     $('#viewer-position').textContent=`${fmt(index+1)} / ${fmt(viewerList.length)}`;
-    $('#viewer-meta').innerHTML=[['参考类型',section(item)],['发型长度',hair(item)],['来源编号',item.source_id],['原图尺寸',item.w+' × '+item.h],['文件大小',mb(item.bytes)]].map(([key,value])=>`<dt>${escape(t(key))}</dt><dd>${escape(value)}</dd>`).join('');
-    $('#viewer-original-style').textContent=item.style?t('原始日文名称：{name}',{name:item.style}):t('原始素材没有细分发型名称，以发长类别命名。');
+    $('#viewer-meta').innerHTML=[['参考类型',section(item)],['发型长度',hair(item)],['来源编号',item.source_id||'—'],['原图尺寸',item.w+' × '+item.h],['文件大小',mb(item.bytes)]].map(([key,value])=>`<dt>${escape(t(key))}</dt><dd>${escape(value)}</dd>`).join('');
+    $('#viewer-original-style').hidden=item.origin==='user';
+    $('#viewer-original-style').textContent=item.origin==='user'?'':item.style?t('原始日文名称：{name}',{name:item.style}):t('原始素材没有细分发型名称，以发长类别命名。');
+    $('.viewer-source').textContent=item.origin==='user'?t('用户上传：{filename}\n上传时间：{time}',{filename:item.original_filename,time:new Date(item.uploaded_at).toLocaleString(language==='en'?'en-US':'zh-CN',{timeZoneName:'short'})}):t('FLUX.2 Klein 生成的假人发型')+'\n'+t('人物来源：あぎ 的人像数据库');
     $('#viewer-download').href=item.full;$('#viewer-download').download=item.id+'.png';$('#viewer-open').href=item.full;
     $('#viewer-prev').disabled=index===0;$('#viewer-next').disabled=index===viewerList.length-1;
     $('#use-hairstyle').disabled = window.parent === window;
@@ -207,12 +212,12 @@
     if(event.key==='Escape'&&document.activeElement===$('#search')){$('#search').value='';state.q='';render();$('#search').blur();}
   });
   const infoContent = {
-    tips:`<h2 id="info-title">使用发型图库</h2><p>按短发、中发、中长发、长发筛选，搜索中文名称、日文名称或来源 ID。点开图片查看假人发型大图，点击「使用此发型 → ComfyUI」写回当前节点。选择不会自动运行工作流。</p><p>节点输出 PNG、宽高、发型 ID、中文名称、描述、长度和来源编号。将图像输出接入支持发型参考的图像编辑工作流。</p><p>PNG 保留生成分辨率，预览和缩略图单独生成。没有细分名称的素材只标注原始发长，不编造刘海或发色标签。</p>`,
-    rules:`<h2 id="info-title">来源与生成说明</h2><p>来源为 <a href="https://ai-portrait-gallery.pages.dev/" target="_blank" rel="noopener noreferrer">AI モデル顔データベース</a> 的正脸参考集合，原作者あぎ（@agi_aibusi）。本库由本地 comfyui-portrait-gallery 的893张正脸图，经「flux-klein-提取发型」工作流生成。</p><p>原站标注CC0 1.0，同时附带使用请求；完整说明见项目 THIRD_PARTY_NOTICES.md。程序代码许可不改变第三方素材条款。</p><p>这是生成式发型参考，并非像素级抠发。假人头模可能保留浅五官起伏，发丝、轮廓和发色也可能有变化；请以预览和原图检查。</p>`
+    tips:`<h2 id="info-title">使用发型图库</h2><p>按短发、中发、中长发、长发筛选，搜索中文、英文、日文名称或来源 ID，也可直接上传现成发型图。点开图片查看假人发型大图，点击「使用此发型 → ComfyUI」写回当前节点。选择不会自动运行工作流。</p><p>节点输出 PNG、宽高、发型 ID、当前语言的名称、描述、长度和来源编号；自定义素材没有来源人物编号。将图像输出接入支持发型参考的图像编辑工作流。</p><p>PNG 保留生成分辨率，预览和缩略图单独生成。没有细分名称的素材只标注原始发长，不编造刘海或发色标签。</p>`,
+    rules:`<h2 id="info-title">来源与生成说明</h2><p>来源为 <a href="https://ai-portrait-gallery.pages.dev/" target="_blank" rel="noopener noreferrer">AI モデル顔データベース</a> 的正脸参考集合，原作者あぎ（@agi_aibusi）。内置素材由本地 comfyui-portrait-gallery 的893张正脸图，经「flux-klein-提取发型」工作流生成。自定义图片由用户直接上传并单独保存。</p><p>原站标注CC0 1.0，同时附带使用请求；完整说明见项目 THIRD_PARTY_NOTICES.md。程序代码许可不改变第三方素材条款。</p><p>这是生成式发型参考，并非像素级抠发。假人头模可能保留浅五官起伏，发丝、轮廓和发色也可能有变化；请以预览和原图检查。</p>`
   };
   const infoEnglish={
-    tips:`<h2 id="info-title">Using the hairstyle gallery</h2><p>Filter by short, medium, medium-long or long hair. Search English, Chinese or Japanese names and source IDs. Open a large preview and click “Use hairstyle → ComfyUI” to update the current node. Selecting a hairstyle never runs a workflow automatically.</p><p>The node outputs the PNG, dimensions, hairstyle ID, localized name and description, hair length, and source ID. Connect the image to an editing workflow that supports references.</p><p>English names translate the source labels. Entries without detailed names use only their source length category; no extra bangs or hair-color labels are inferred.</p>`,
-    rules:`<h2 id="info-title">Sources and generation</h2><p>Based on 893 face references from <a href="https://ai-portrait-gallery.pages.dev/" target="_blank" rel="noopener noreferrer">AI Model Face Database</a> by Agi (@agi_aibusi), processed locally with the FLUX Klein hairstyle-extraction workflow.</p><p>The source states CC0 1.0 and includes additional requests. See THIRD_PARTY_NOTICES.md for the preserved source notice. The software license does not change third-party material terms.</p><p>This is generative editing rather than pixel-accurate hair segmentation. Mannequin heads may retain faint facial contours; silhouettes, strands and colors can vary.</p>`
+    tips:`<h2 id="info-title">Using the hairstyle gallery</h2><p>Filter by short, medium, medium-long or long hair. Search English, Chinese or Japanese names and source IDs, or upload a finished hairstyle reference. Open a large preview and click “Use hairstyle → ComfyUI” to update the current node. Selecting a hairstyle never runs a workflow automatically.</p><p>The node outputs the PNG, dimensions, hairstyle ID, localized name and description, hair length, and source ID. Connect the image to an editing workflow that supports references.</p><p>English names translate the source labels. Entries without detailed names use only their source length category; no extra bangs or hair-color labels are inferred.</p>`,
+    rules:`<h2 id="info-title">Sources and generation</h2><p>Based on 893 face references from <a href="https://ai-portrait-gallery.pages.dev/" target="_blank" rel="noopener noreferrer">AI Model Face Database</a> by Agi (@agi_aibusi), processed locally with the FLUX Klein hairstyle-extraction workflow. Custom references are uploaded directly and stored separately.</p><p>The source states CC0 1.0 and includes additional requests. See THIRD_PARTY_NOTICES.md for the preserved source notice. The software license does not change third-party material terms.</p><p>This is generative editing rather than pixel-accurate hair segmentation. Mannequin heads may retain faint facial contours; silhouettes, strands and colors can vary.</p>`
   };
   let infoKind='tips';
   function showInfo(){ $('#info-content').innerHTML=(language==='en'?infoEnglish:infoContent)[infoKind]; }
@@ -237,17 +242,83 @@
     $('#current-hairstyle').textContent = t('当前节点发型：{id}',{id:selectedId});
     render(false);
   });
+  const uploadDialog=$('#upload-dialog'), uploadForm=$('#upload-form');
+  let uploadFile=null,uploadURL=null,uploadReady=false,uploadBusy=false,uploadVersion=0,uploadLanguage=language;
+  const uploadErrors={
+    image_required:'请选择一张图片。',single_image_only:'每次只能上传一张图片。',
+    file_too_large:'图片超过 20 MiB 限制。',too_many_pixels:'图片超过 3200 万像素限制。',
+    unsupported_format:'仅支持静态 PNG、JPEG、WebP 图片。',animated_image:'暂不支持动画图片。',
+    invalid_image:'图片损坏或无法读取，请重新选择。',invalid_filename:'文件名无效，请重命名后重试。',
+    name_required:'请填写名称。',invalid_metadata:'请检查名称和发长选项，名称最多 120 个字符。',
+    invalid_request:'上传请求无效，请重新选择图片后重试。',storage_error:'无法保存到用户素材目录，请检查写入权限后重试。'
+  };
+  function uploadError(code){const el=$('#upload-error');el.dataset.code=code;el.textContent=t(uploadErrors[code]||'上传失败，请重试。');el.hidden=false;}
+  function renderUpload(){
+    $('#upload-name-label').textContent=t(uploadLanguage==='en'?'英文名称（必填）':'中文名称（必填）');
+    $('#upload-other-label').textContent=t(uploadLanguage==='en'?'中文名称（可选）':'英文名称（可选）');
+    $('#upload-filename').textContent=uploadFile?uploadFile.name:t('尚未选择图片');
+    $('#upload-save').textContent=t(uploadBusy?'正在保存…':'保存到图库');
+    $('#upload-save').disabled=uploadBusy||!uploadReady;
+    for(const id of ['upload-cancel','upload-choose','upload-name','upload-other-name','upload-hair'])$('#'+id).disabled=uploadBusy;
+    if(!$('#upload-error').hidden)uploadError($('#upload-error').dataset.code);
+  }
+  function releaseUpload(){
+    uploadVersion++;if(uploadURL)URL.revokeObjectURL(uploadURL);
+    uploadURL=null;uploadFile=null;uploadReady=false;uploadForm.reset();
+    $('#upload-preview').removeAttribute('src');$('#upload-preview').hidden=true;$('#upload-error').hidden=true;
+    if(!viewer.open&&!info.open)document.body.classList.remove('modal-open');renderUpload();
+  }
+  $('#upload-open').addEventListener('click',()=>{
+    releaseUpload();uploadLanguage=language;renderUpload();uploadDialog.showModal();document.body.classList.add('modal-open');$('#upload-choose').focus();
+  });
+  $('#upload-choose').addEventListener('click',()=>$('#upload-file').click());
+  $('#upload-file').addEventListener('change',()=>{
+    const file=$('#upload-file').files[0];uploadVersion++;const version=uploadVersion;
+    if(uploadURL)URL.revokeObjectURL(uploadURL);uploadURL=null;uploadFile=file||null;uploadReady=false;
+    $('#upload-preview').hidden=true;$('#upload-preview').removeAttribute('src');$('#upload-error').hidden=true;renderUpload();
+    if(!file)return;
+    if(file.size>20*1024*1024){uploadError('file_too_large');return;}
+    if(file.type&&!['image/png','image/jpeg','image/webp'].includes(file.type)){uploadError('unsupported_format');return;}
+    const image=$('#upload-preview');
+    image.onload=()=>{if(version!==uploadVersion)return;if(image.naturalWidth*image.naturalHeight>32000000){uploadError('too_many_pixels');return;}uploadReady=true;image.hidden=false;renderUpload();};
+    image.onerror=()=>{if(version===uploadVersion){uploadReady=false;uploadError('invalid_image');renderUpload();}};
+    uploadURL=URL.createObjectURL(file);image.src=uploadURL;
+  });
+  $('#upload-cancel').addEventListener('click',()=>{if(!uploadBusy)uploadDialog.close();});
+  uploadDialog.addEventListener('cancel',event=>{if(uploadBusy)event.preventDefault();});
+  uploadDialog.addEventListener('close',releaseUpload);
+  uploadForm.addEventListener('submit',async event=>{
+    event.preventDefault();if(uploadBusy)return;
+    if(!uploadReady||!uploadFile){uploadError('image_required');return;}
+    const name=$('#upload-name').value.trim();if(!name){uploadError('name_required');$('#upload-name').focus();return;}
+    uploadBusy=true;$('#upload-error').hidden=true;renderUpload();
+    const data=new FormData();data.append('image',uploadFile);data.append('name',name);data.append('other_name',$('#upload-other-name').value.trim());data.append('language',uploadLanguage);data.append('hair',$('#upload-hair').value);
+    try{
+      const response=await fetch(new URL('upload',location.href),{method:'POST',body:data,credentials:'same-origin'});
+      const result=await response.json();if(!response.ok){uploadError(result.error||'invalid_request');return;}
+      records=result.catalog.records;meta=result.catalog.meta;ranking=result.catalog.ranking;
+      byId.clear();records.forEach(row=>byId.set(row.id,row));
+      Object.assign(state,{section:'all',origin:'user',hair:'',style:'',q:'',favorites:false,sort:'default'});
+      uploadBusy=false;uploadDialog.close();setLanguage(language,false);
+      openViewer(filtered,filtered.findIndex(row=>row.id===result.record.id));toast(t('发型已保存，可点击“使用此发型”写回节点。'));
+    }catch{uploadError('upload_failed');}
+    finally{uploadBusy=false;renderUpload();}
+  });
+
   function setLanguage(value,notify=true){
     language=I18N.normalize(value);I18N.persist(language);applyStatic(language);
     const url=new URL(location.href);url.searchParams.set('lang',language);history.replaceState(null,'',url.pathname+url.search+url.hash);
     $('#language').value=language;$('#viewer-language').value=language;$('.brand-language').textContent=language==='en'?'EN':'中文';
     document.querySelectorAll('[data-total]').forEach(el=>el.textContent=fmt(meta.total));
-    $('#generation-status').textContent=meta.total===meta.target?t('{count} 张正脸已全部转换',{count:fmt(meta.total)}):t('已生成 {count} / {target} 张，刷新查看新增素材',{count:fmt(meta.total),target:fmt(meta.target)});
+    document.querySelectorAll('[data-builtin]').forEach(el=>el.textContent=fmt(meta.builtin_count));
+    document.querySelectorAll('[data-user]').forEach(el=>el.textContent=fmt(meta.user_count));
+    $('#generation-status').textContent=t('内置 {builtin} · 自定义 {user}',{builtin:fmt(meta.builtin_count),user:fmt(meta.user_count)});
+    $('#library-warning').hidden=!meta.builtin_missing;
     $('#current-hairstyle').textContent=selectedId?t('当前节点发型：{id}',{id:selectedId}):t('从节点打开可选择发型');
     const keepShown=shown;buildHero();renderRanking();render(false);
     while(shown<Math.min(keepShown,filtered.length))showMore();
     if(viewer.open)showViewer(viewerIndex);
-    if(info.open)showInfo();applyTheme();
+    if(info.open)showInfo();renderUpload();applyTheme();
     if(notify&&window.parent!==window)window.parent.postMessage({type:'hairstyle-gallery-language',language},location.origin);
   }
   $('#language').addEventListener('change',event=>setLanguage(event.target.value));

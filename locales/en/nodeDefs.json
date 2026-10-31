@@ -1,7 +1,7 @@
 {
   "HairstyleGallery": {
     "display_name": "Hairstyle Gallery",
-    "description": "Offline mannequin hairstyles with Chinese/English browsing and text outputs.",
+    "description": "Browse built-in hairstyles or import one custom reference image, with bilingual names and PNG output.",
     "inputs": {
       "hairstyle_id": {
         "name": "Hairstyle ID",

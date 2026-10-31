@@ -1,4 +1,6 @@
 """ComfyUI hairstyle selector: offline browsing and original PNG tensor output."""
+import asyncio
+import logging
 import hashlib
 import json
 from pathlib import Path
@@ -9,7 +11,8 @@ from PIL import Image, ImageOps
 from aiohttp import web
 from server import PromptServer
 
-from .catalog import ROOT, records, hairstyle, asset, browser_payload
+from .catalog import ROOT, USER_LIBRARY, records, hairstyle, asset, browser_payload
+from .uploads import import_image, UploadError, MAX_BYTES
 
 
 class HairstyleGallery:
@@ -23,7 +26,7 @@ class HairstyleGallery:
     RETURN_NAMES = ("image", "width", "height", "hairstyle_id", "name", "description", "hair_length", "source_id")
     FUNCTION = "load_hairstyle"
     CATEGORY = "image/Hairstyle Gallery"
-    DESCRIPTION = "本地假人发型图库：长度、名称、风格筛选与收藏，输出发型PNG及名称；从893张正脸参考提取。"
+    DESCRIPTION = "本地发型图库：浏览内置参考或单张上传自定义图片，支持中英文名称、筛选、收藏和PNG输出。"
 
     @classmethod
     def VALIDATE_INPUTS(cls, hairstyle_id, language="zh"):
@@ -60,6 +63,55 @@ async def catalog_route(request):
         return web.json_response(records())
     except (ValueError, FileNotFoundError) as exc:
         return web.json_response({"error": str(exc)}, status=503)
+
+
+@routes.post("/hairstyle_gallery/upload")
+async def upload_route(request):
+    try:
+        multipart = await request.multipart()
+        fields, data, filename = {}, None, None
+        async for part in multipart:
+            if part.filename is not None:
+                if part.name != "image" or data is not None:
+                    raise UploadError("single_image_only")
+                chunks, size = [], 0
+                while chunk := await part.read_chunk():
+                    size += len(chunk)
+                    if size > MAX_BYTES:
+                        raise UploadError("file_too_large", 413)
+                    chunks.append(chunk)
+                data, filename = b"".join(chunks), part.filename
+            else:
+                if part.name not in {"name", "other_name", "language", "hair"} or part.name in fields:
+                    raise UploadError("invalid_metadata")
+                chunks, size = [], 0
+                while chunk := await part.read_chunk():
+                    size += len(chunk)
+                    if size > 2048:
+                        raise UploadError("invalid_metadata")
+                    chunks.append(chunk)
+                fields[part.name] = b"".join(chunks).decode("utf-8")
+        if data is None:
+            raise UploadError("image_required")
+        try:
+            await asyncio.to_thread(records)
+        except (ValueError, OSError) as exc:
+            raise UploadError("storage_error", 500) from exc
+        row = await asyncio.to_thread(import_image, data, name=fields.get("name", ""),
+            other_name=fields.get("other_name", ""), language=fields.get("language", "zh"),
+            hair=fields.get("hair", "unknown"), filename=filename, root=USER_LIBRARY)
+        # Reuse the existing allow-listed, browser-relative catalog representation.
+        payload = browser_payload()
+        selected = next(item for item in payload["records"] if item["id"] == row["id"])
+        return web.json_response({"record": selected, "catalog": payload}, status=201,
+                                 headers={"Cache-Control": "no-store"})
+    except UploadError as exc:
+        return web.json_response({"error": exc.code}, status=exc.status)
+    except (ValueError, UnicodeError, AssertionError):
+        return web.json_response({"error": "invalid_request"}, status=400)
+    except OSError:
+        logging.exception("Unable to save a custom hairstyle")
+        return web.json_response({"error": "storage_error"}, status=500)
 
 
 @routes.get("/hairstyle_gallery/data.js")

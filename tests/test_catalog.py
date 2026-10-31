@@ -3,13 +3,13 @@ from pathlib import Path
 spec=importlib.util.spec_from_file_location('hairstyle_catalog',Path(__file__).resolve().parents[1]/'catalog.py');c=importlib.util.module_from_spec(spec);spec.loader.exec_module(c)
 class CatalogTests(unittest.TestCase):
  def setUp(self):
-  self.tmp=tempfile.TemporaryDirectory();self.old=c.LIBRARY;c.LIBRARY=Path(self.tmp.name)
+  self.tmp=tempfile.TemporaryDirectory();self.old=c.LIBRARY;self.old_user=c.USER_LIBRARY;c.LIBRARY=Path(self.tmp.name);c.USER_LIBRARY=c.LIBRARY/"user"
   self.row={'id':'h-f123','source_id':'f123','name_zh':'空气刘海短发','section':'hairstyle',**{field:f'img/{kind}/h-f123{suffix}' for kind,(field,suffix) in c.FIELDS.items()}}
   for kind,(field,suffix) in c.FIELDS.items():
    p=c.LIBRARY/self.row[field];p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(b'fixture')
   (c.LIBRARY/'data').mkdir();self.write([self.row])
  def write(self,rows):(c.LIBRARY/'data/hairstyle-zh.json').write_text(json.dumps(rows,ensure_ascii=False))
- def tearDown(self):c.LIBRARY=self.old;c._read_library.cache_clear();self.tmp.cleanup()
+ def tearDown(self):c.LIBRARY=self.old;c.USER_LIBRARY=self.old_user;c._read_library.cache_clear();self.tmp.cleanup()
  def test_generated_images_are_allowlisted(self):
   for kind,(_,suffix) in c.FIELDS.items():self.assertEqual(c.asset(kind,'h-f123'+suffix).read_bytes(),b'fixture')
  def test_paths_extensions_and_unknown_ids_are_rejected(self):
