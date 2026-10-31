@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "python_tests": 8,
+  "javascript_checks": [
+    "gallery filtering",
+    "language resolution and placeholders",
+    "syntax"
+  ],
+  "backend": [
+    "English name/description/length",
+    "legacy omitted language defaults to Chinese"
+  ],
+  "browser": [
+    "English and Chinese titles and style names",
+    "English search above-brow: 38 results",
+    "favorites and filters retained across language changes",
+    "open viewer retained across language changes",
+    "language persists after reload",
+    "legacy UI workflow remains Chinese",
+    "node toggle and embedded gallery synchronize",
+    "node language saved in workflow widget values",
+    "selection writeback does not queue execution",
+    "390px English layout: no horizontal overflow"
+  ],
+  "dataset_records": 893,
+  "image_assets_regenerated": false
+}

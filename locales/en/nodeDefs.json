@@ -1,0 +1,42 @@
+{
+  "HairstyleGallery": {
+    "display_name": "Hairstyle Gallery",
+    "description": "Offline mannequin hairstyles with Chinese/English browsing and text outputs.",
+    "inputs": {
+      "hairstyle_id": {
+        "name": "Hairstyle ID",
+        "tooltip": "Select a mannequin hairstyle from the gallery. Selection does not run the workflow."
+      },
+      "language": {
+        "name": "UI / text language",
+        "tooltip": "zh: Chinese; en: English. Changes the interface, name, description, and hair-length text."
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "Image"
+      },
+      "1": {
+        "name": "Width"
+      },
+      "2": {
+        "name": "Height"
+      },
+      "3": {
+        "name": "Hairstyle ID"
+      },
+      "4": {
+        "name": "Name"
+      },
+      "5": {
+        "name": "Description"
+      },
+      "6": {
+        "name": "Hair length"
+      },
+      "7": {
+        "name": "Source ID"
+      }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "ok": true,
+  "complete": true,
+  "records": 893,
+  "assets": 2679,
+  "lengths": {
+    "短发": 433,
+    "中发": 229,
+    "中长发": 154,
+    "长发": 77
+  },
+  "bytes": 2011434211,
+  "errors": []
+}

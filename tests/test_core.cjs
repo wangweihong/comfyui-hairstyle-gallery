@@ -1,0 +1,14 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+const context = {module:{exports:{}},URLSearchParams};
+vm.runInNewContext(fs.readFileSync(require('node:path').join(__dirname,'../web/core.mjs'),'utf8'), context);
+const {filterRecords,readState}=context.module.exports;
+const rows=[{id:'h-f1',hair:'ショート',style:'bangs',search:'h-f1 f1 空气刘海 短发',w:100,h:200,section:'hairstyle'},{id:'h-f2',hair:'ロング',style:'',search:'h-f2 f2 长发',w:100,h:300,section:'hairstyle'}];
+assert.equal(filterRecords(rows,{q:'空气 短发'}).length,1);
+assert.equal(filterRecords(rows,{q:'空气 长发'}).length,0);
+assert.equal(filterRecords(rows,{hair:'ロング'})[0].id,'h-f2');
+assert.equal(filterRecords(rows,{favorites:true},new Set(['h-f1']))[0].id,'h-f1');
+assert.equal(filterRecords(rows,{sort:'size'})[0].id,'h-f2');
+assert.equal(readState('#sec=face&hair=invalid&sort=invalid',rows).section,'all');
+console.log('Gallery search, filters, favorites, sorting and URL parsing passed.');

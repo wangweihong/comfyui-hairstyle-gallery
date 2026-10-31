@@ -1,0 +1,24 @@
+{
+  "1": {
+    "class_type": "HairstyleGallery",
+    "inputs": {
+      "hairstyle_id": "h-f71f980dde3"
+    },
+    "_meta": {
+      "title": "Hairstyle Gallery 发型图库 - 浏览并选择假人发型PNG"
+    }
+  },
+  "2": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "1",
+        0
+      ],
+      "filename_prefix": "images/hairstyle-gallery/selected/hairstyle"
+    },
+    "_meta": {
+      "title": "Save Image - 预览并保存选中发型"
+    }
+  }
+}

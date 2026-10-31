@@ -1,0 +1,10 @@
+[project]
+name = "comfyui-hairstyle-gallery"
+version = "0.1.0"
+description = "Offline mannequin hairstyle references with names and PNG output for ComfyUI"
+requires-python = ">=3.10"
+dependencies = ["Pillow", "numpy", "torch", "aiohttp"]
+license = { text = "MIT (independent code only; see third-party material notices)" }
+
+[tool.comfy]
+DisplayName = "Hairstyle Gallery 发型图库"

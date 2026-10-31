@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.log
+*.pid
+*.part
+.venv/
+dist/
+artifacts/
+
+# Runtime records and local environment
+library/jobs/
+library/experiments/
+library/workflows/

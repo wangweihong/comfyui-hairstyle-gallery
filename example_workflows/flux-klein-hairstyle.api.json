@@ -1,0 +1,291 @@
+{
+  "1": {
+    "class_type": "PortraitGallery",
+    "inputs": {
+      "portrait_id": "f71f980dde3"
+    },
+    "_meta": {
+      "title": "Portrait Gallery 人像图库 - 读取正脸原图"
+    }
+  },
+  "2": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "image2image/flux2/flux-2-klein-9b.safetensors",
+      "weight_dtype": "default"
+    },
+    "_meta": {
+      "title": "Load Diffusion Model - 加载原工作流Klein 9B"
+    }
+  },
+  "3": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "lora_name": "klein/Klein-consistency.safetensors",
+      "strength_model": 0.8
+    },
+    "_meta": {
+      "title": "Load LoRA - 保留原一致性LoRA"
+    }
+  },
+  "4": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "qwen_3_8b_fp8mixed.safetensors",
+      "type": "flux2",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Load CLIP - 加载原文本编码器"
+    }
+  },
+  "5": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "flux2/flux2-vae.safetensors"
+    },
+    "_meta": {
+      "title": "Load VAE - 加载原Flux2 VAE"
+    }
+  },
+  "6": {
+    "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
+    "inputs": {
+      "image": [
+        "1",
+        0
+      ],
+      "aspect_ratio": "original",
+      "proportional_width": 1,
+      "proportional_height": 1,
+      "fit": "crop",
+      "method": "lanczos",
+      "round_to_multiple": "8",
+      "scale_to_side": "shortest",
+      "scale_to_length": 1080,
+      "background_color": "#000000"
+    },
+    "_meta": {
+      "title": "LayerUtility: ImageScaleByAspectRatio V2 - 沿用原工作流最短边1080"
+    }
+  },
+  "7": {
+    "class_type": "GetImageSize",
+    "inputs": {
+      "image": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Get Image Size - 读取参考宽高"
+    }
+  },
+  "8": {
+    "class_type": "VAEEncode",
+    "inputs": {
+      "pixels": [
+        "6",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAE Encode - 编码发型参考"
+    }
+  },
+  "9": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "4",
+        0
+      ],
+      "text": "Extract only the exact hairstyle from the reference photo and display it on a blank white wig display mannequin head and short neck bust.\nPreserve the original haircut silhouette, bangs, parting, length, layers, volume, individual hair strands and hair color exactly. Keep the entire visible hairstyle in frame.\nReplace all visible human face, ears, neck and shoulders with opaque solid matte white plastic. The mannequin face is a completely featureless smooth egg-shaped oval: no eyes, no eyelids, no eyebrows, no nose, no nostrils, no mouth, no lips, no facial grooves or sculpted facial features. It is a blank white display form, not a blurred or skin-colored human face. No skin texture or human skin color.\nRemove clothing, jewelry and hair accessories. Show just the original hair on the plain white mannequin head and neck bust. Clean minimal light studio background, realistic detailed hair, sharp focus."
+    },
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt) - 原始提取发型提示词"
+    }
+  },
+  "10": {
+    "class_type": "ConditioningZeroOut",
+    "inputs": {
+      "conditioning": [
+        "9",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Conditioning Zero Out - 空负向条件"
+    }
+  },
+  "11": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "9",
+        0
+      ],
+      "latent": [
+        "8",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Set Reference Latent - 正向发型参考"
+    }
+  },
+  "12": {
+    "class_type": "ReferenceLatent",
+    "inputs": {
+      "conditioning": [
+        "10",
+        0
+      ],
+      "latent": [
+        "8",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Set Reference Latent - 负向参考结构"
+    }
+  },
+  "13": {
+    "class_type": "CFGGuider",
+    "inputs": {
+      "model": [
+        "3",
+        0
+      ],
+      "positive": [
+        "11",
+        0
+      ],
+      "negative": [
+        "12",
+        0
+      ],
+      "cfg": 1.0
+    },
+    "_meta": {
+      "title": "CFG Guider - 沿用CFG1"
+    }
+  },
+  "14": {
+    "class_type": "RandomNoise",
+    "inputs": {
+      "noise_seed": 295046273850143
+    },
+    "_meta": {
+      "title": "RandomNoise - 沿用固定种子"
+    }
+  },
+  "15": {
+    "class_type": "KSamplerSelect",
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "_meta": {
+      "title": "KSamplerSelect - 沿用Euler"
+    }
+  },
+  "16": {
+    "class_type": "Flux2Scheduler",
+    "inputs": {
+      "steps": 4,
+      "width": [
+        "7",
+        0
+      ],
+      "height": [
+        "7",
+        1
+      ]
+    },
+    "_meta": {
+      "title": "Flux2Scheduler - 沿用4步调度"
+    }
+  },
+  "17": {
+    "class_type": "EmptyFlux2LatentImage",
+    "inputs": {
+      "width": [
+        "7",
+        0
+      ],
+      "height": [
+        "7",
+        1
+      ],
+      "batch_size": 1
+    },
+    "_meta": {
+      "title": "Empty Flux 2 Latent - 按参考宽高创建潜空间"
+    }
+  },
+  "18": {
+    "class_type": "SamplerCustomAdvanced",
+    "inputs": {
+      "noise": [
+        "14",
+        0
+      ],
+      "guider": [
+        "13",
+        0
+      ],
+      "sampler": [
+        "15",
+        0
+      ],
+      "sigmas": [
+        "16",
+        0
+      ],
+      "latent_image": [
+        "17",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "SamplerCustomAdvanced - 提取发型并生成无脸假人"
+    }
+  },
+  "19": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "18",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAE Decode - 解码假人发型"
+    }
+  },
+  "20": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "19",
+        0
+      ],
+      "filename_prefix": "images/hairstyle-gallery/f71f980dde3"
+    },
+    "_meta": {
+      "title": "Save Image - 保存独立发型原图"
+    }
+  }
+}

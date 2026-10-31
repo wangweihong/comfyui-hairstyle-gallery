@@ -1,0 +1,14 @@
+{
+  "source_project": "comfyui-portrait-gallery",
+  "original_source": "https://ai-portrait-gallery.pages.dev/",
+  "source_records": 893,
+  "section": "face",
+  "generated_with": "flux-klein-提取发型.json",
+  "seed": 295046273850143,
+  "name_policy": "Original Chinese/Japanese hairstyle description; length fallback when absent. No inferred extra labels.",
+  "source_repository": "https://github.com/wangweihong/comfyui-portrait-gallery",
+  "source_commit": "c375f5bd6632cc572e4c235c3a737df6da471a93",
+  "generated_records": 893,
+  "source_workflow_sha256": "692cfb2f2ddbd6d31b61c168296dd98e2a10898af05467bd6a07de2bd0b0e374",
+  "prompt_sha256": "2431d9d82f0364bb0601d588847602ff269da3f0b24440530b4f8f8029869559"
+}

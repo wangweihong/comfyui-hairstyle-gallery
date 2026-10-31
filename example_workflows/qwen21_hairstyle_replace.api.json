@@ -1,0 +1,150 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "inputs": {
+      "image": "hairstyle-qwen21/01_photo.png"
+    },
+    "_meta": {
+      "title": "Load Image - 图1人物底图保留身份服装姿态与画风"
+    }
+  },
+  "2": {
+    "class_type": "HairstyleGallery",
+    "inputs": {
+      "hairstyle_id": "h-f0d3eaf7f31"
+    },
+    "_meta": {
+      "title": "Hairstyle Gallery 发型图库 - 图2仅提供目标发型与发色"
+    }
+  },
+  "3": {
+    "class_type": "UNETLoader",
+    "inputs": {
+      "unet_name": "image2image/qwen_image_2.1_bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "_meta": {
+      "title": "Load Diffusion Model - 加载Qwen Image 2.1基础模型"
+    }
+  },
+  "4": {
+    "class_type": "QwenImage21Cache",
+    "inputs": {
+      "model": [
+        "3",
+        0
+      ],
+      "device": "auto",
+      "dtype": "default"
+    },
+    "_meta": {
+      "title": "Qwen Image 2.1 Cache - 缓存人物与发型双参考"
+    }
+  },
+  "5": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "text_encoders/qwen3vl_8b_bf16.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "_meta": {
+      "title": "Load CLIP - 加载Qwen视觉文本编码器"
+    }
+  },
+  "6": {
+    "class_type": "VAELoader",
+    "inputs": {
+      "vae_name": "vae/qwen_image_2.1_vae_bf16.safetensors"
+    },
+    "_meta": {
+      "title": "Load VAE - 加载Qwen Image 2.1配套VAE"
+    }
+  },
+  "7": {
+    "class_type": "TextEncodeQwenImage21",
+    "inputs": {
+      "clip": [
+        "5",
+        0
+      ],
+      "prompt": "以图1为人物和画面底图，只将图1人物的头发替换为图2假人头模展示的发型。图2仅提供头发的轮廓、长度、刘海、分缝、层次、蓬松度、发丝走向和发色；将这些特征自然适配到图1原有的头部大小、角度、透视和发际线。\n保持图1的人物身份、五官、脸型、眼睛、表情、妆容、肤色、身体比例、姿势、服装、首饰、镜头构图、背景与光照。保留图1原有的视觉风格与媒介：照片保持真实摄影，三维角色保持原来的三维渲染质感，插画保持原有线条、色块与笔触。只让新发型融入图1，不改变整幅图的画风。\n彻底移除被替换的原发型，包括原来长发在肩膀、衣服和背景上的残留；头发移除后露出的区域依据图1自然补全。新头发与额头、耳朵、面颊和颈部衔接自然，遮挡、发丝细节、明暗与图1一致。\n不要复制图2的白色假人面部、头模材质、头模轮廓、肩颈、底座、背景或构图；不要把图1变成假人，不要将两张图拼贴，不要新增文字、边框或对照排版。输出单张完成的换发型图像。",
+      "negative_prompt": "",
+      "resolution": 1024,
+      "images.image_1": [
+        "1",
+        0
+      ],
+      "images.image_2": [
+        "2",
+        0
+      ],
+      "vae": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "Text Encode Qwen Image 2.1 - 限定只换头发并保持人物原有画风"
+    }
+  },
+  "8": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "4",
+        0
+      ],
+      "seed": 2026103101,
+      "steps": 25,
+      "cfg": 1.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "7",
+        0
+      ],
+      "negative": [
+        "7",
+        1
+      ],
+      "latent_image": [
+        "7",
+        2
+      ],
+      "denoise": 1.0
+    },
+    "_meta": {
+      "title": "KSampler - 固定种子25步替换人物发型"
+    }
+  },
+  "9": {
+    "class_type": "VAEDecode",
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "6",
+        0
+      ]
+    },
+    "_meta": {
+      "title": "VAE Decode - 解码换发型图像"
+    }
+  },
+  "10": {
+    "class_type": "SaveImage",
+    "inputs": {
+      "images": [
+        "9",
+        0
+      ],
+      "filename_prefix": "images/qwen2.1/hairstyle/result"
+    },
+    "_meta": {
+      "title": "Save Image - 保存至指定hairstyle目录"
+    }
+  }
+}

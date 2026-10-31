@@ -1,0 +1,33 @@
+{
+  "prompt_id": "45b96806-3a4a-49b0-955c-d74bdebe2d7a",
+  "status": "success",
+  "outputs": {
+    "6": {
+      "text": [
+        "迷你波波（眉上齐刘海）"
+      ]
+    },
+    "3": {
+      "text": [
+        "Mini bob (blunt above-brow bangs)"
+      ]
+    },
+    "5": {
+      "text": [
+        "Short"
+      ]
+    },
+    "4": {
+      "text": [
+        "Mannequin hairstyle / Short / Mini bob (blunt above-brow bangs)"
+      ]
+    }
+  },
+  "frontend_workflow": {
+    "prompt_id": "adb5e8d2-a7d5-432f-a4da-4f53f9fa17b4",
+    "status": "success",
+    "language_input": "en",
+    "saved_language_widget": "en",
+    "legacy_default_verified_in_ui": "zh"
+  }
+}

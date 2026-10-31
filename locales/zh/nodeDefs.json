@@ -1,0 +1,42 @@
+{
+  "HairstyleGallery": {
+    "display_name": "Hairstyle Gallery 发型图库",
+    "description": "本地假人发型图库，支持中英文界面与名称输出。",
+    "inputs": {
+      "hairstyle_id": {
+        "name": "发型编号",
+        "tooltip": "从图库选择假人发型，不会自动运行工作流。"
+      },
+      "language": {
+        "name": "界面与文本语言",
+        "tooltip": "zh：中文；en：English。切换名称、描述和发型长度。"
+      }
+    },
+    "outputs": {
+      "0": {
+        "name": "图像"
+      },
+      "1": {
+        "name": "宽度"
+      },
+      "2": {
+        "name": "高度"
+      },
+      "3": {
+        "name": "发型编号"
+      },
+      "4": {
+        "name": "名称"
+      },
+      "5": {
+        "name": "描述"
+      },
+      "6": {
+        "name": "发型长度"
+      },
+      "7": {
+        "name": "来源编号"
+      }
+    }
+  }
+}
