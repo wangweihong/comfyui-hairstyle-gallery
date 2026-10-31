@@ -27,6 +27,18 @@ python -m pip install -r comfyui-hairstyle-gallery/requirements.txt
 
 默认读取节点目录的 `library/`。本机数据实际位于 `/media/wwhvw/备份/comfyui/发型/`，本机安装与容器可访问的图片使用硬链接共享，不复制整套图库。仓库自带可直接使用的 `library/`；也可通过环境变量 `COMFYUI_HAIRSTYLE_GALLERY_LIBRARY` 指向容器内可见的完整素材库路径。
 
+## 每次运行随机：独立节点
+
+添加 **image → Hairstyle Gallery → Random Hairstyle Gallery 随机发型图库**。将 `image` 接入后续工作流或 Preview Image，再点击运行；每次都会自动抽取一张发型，无需点击随机按钮。`origin` 可选 `all`（全部）、`builtin`（内置）、`user`（自定义），`language` 支持中文和英文。随机范围不受浏览页面筛选影响。
+
+新节点提供与原节点相同的八个输出，图像、尺寸、编号、名称、描述、发长和来源编号均对应同一张实际抽中的素材。执行完成后显示本次编号和预览；保存的预览信息不参与下一次抽样。
+
+原 **Hairstyle Gallery** 的输入、固定选图方式、八个输出及旧工作流保持不变。需要固定某次随机结果时，将随机节点输出的 `hairstyle_id` 填入原节点。缺少原图的记录会跳过，无可用原图时提示错误。抽样可能偶然重复；节点本身不会启动或追加任务。
+
+可导入 [`example_workflows/random_hairstyle_preview.json`](example_workflows/random_hairstyle_preview.json)，连续点击运行观察结果；附同名 API 工作流。
+
+![独立随机节点每次运行自动抽取发型](docs/random-node.png)
+
 ## 单张上传自定义发型
 
 1. 在独立图库或节点打开的图库中点击 **上传发型**。
@@ -124,6 +136,7 @@ node tests/test_core.cjs
 node tests/test_i18n.cjs
 node --check web/app.mjs
 node --check web/hairstyle_gallery.js
+node --test tests/test_random_frontend.cjs
 ```
 
 来源人物素材为 [AI モデル顔データベース](https://ai-portrait-gallery.pages.dev/)，原作者 [あぎ](https://x.com/agi_aibusi)。本项目为独立生成与整理工具，来源和适用范围见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。独立程序代码适用MIT许可。

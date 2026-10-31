@@ -3,6 +3,8 @@ import asyncio
 import logging
 import hashlib
 import json
+import random
+import uuid
 from pathlib import Path
 
 import numpy as np
@@ -52,6 +54,54 @@ class HairstyleGallery:
         lang = "en" if language == "en" else "zh"
         description = " / ".join(value for value in (row["section_" + lang], row["hair_" + lang], row["style_" + lang]) if value)
         return tensor, width, height, hairstyle_id, row["name_" + lang], description, row["hair_" + lang], row["source_id"]
+
+
+class RandomHairstyleGallery(HairstyleGallery):
+    @classmethod
+    def INPUT_TYPES(cls):
+        return {"required": {"origin": (["all", "builtin", "user"], {"default": "all",
+                    "tooltip": "随机范围：全部 / 内置 / 自定义。Random pool: all / built-in / custom."})},
+                "optional": {"language": (["zh", "en"], {"default": "zh",
+                    "tooltip": "界面与文本输出语言 / UI and text output language"})}}
+
+    FUNCTION = "load_random"
+    DESCRIPTION = "每次运行工作流时，自动从可用原图中随机抽取一个发型；输出与原发型图库相同的八项结果。"
+
+    @classmethod
+    def _candidates(cls, origin="all", language="zh"):
+        if origin not in ("all", "builtin", "user"):
+            raise ValueError("Invalid random source" if language == "en" else "无效的随机来源")
+        available = []
+        for row in records():
+            if origin != "all" and row["origin"] != origin:
+                continue
+            try:
+                asset("full", Path(row["full"]).name)
+            except FileNotFoundError:
+                continue
+            available.append(row)
+        if not available:
+            raise ValueError("No available hairstyle originals in this source. Install the library, upload a reference, or change the source."
+                             if language == "en" else "当前来源没有可用发型原图，请安装素材库、上传参考图或切换来源。")
+        return available
+
+    @classmethod
+    def VALIDATE_INPUTS(cls, origin="all", language="zh"):
+        try:
+            cls._candidates(origin, language)
+        except (ValueError, FileNotFoundError) as exc:
+            return str(exc)
+        return True
+
+    @classmethod
+    def IS_CHANGED(cls, origin="all", language="zh"):
+        # Fresh on every queued prompt, without NaN in saved prompt metadata.
+        return uuid.uuid4().hex
+
+    def load_random(self, origin="all", language="zh"):
+        selected = random.choice(self._candidates(origin, language))
+        result = super().load_hairstyle(selected["id"], language)
+        return {"ui": {"hairstyle_id": [result[3]], "name": [result[4]]}, "result": result}
 
 
 routes = PromptServer.instance.routes
@@ -147,7 +197,7 @@ async def gallery_route(request):
     return web.FileResponse(ROOT / "web/gallery.html", headers={"Cache-Control": "no-cache"})
 
 
-NODE_CLASS_MAPPINGS = {"HairstyleGallery": HairstyleGallery}
-NODE_DISPLAY_NAME_MAPPINGS = {"HairstyleGallery": "Hairstyle Gallery 发型图库"}
+NODE_CLASS_MAPPINGS = {"HairstyleGallery": HairstyleGallery, "RandomHairstyleGallery": RandomHairstyleGallery}
+NODE_DISPLAY_NAME_MAPPINGS = {"HairstyleGallery": "Hairstyle Gallery 发型图库", "RandomHairstyleGallery": "Random Hairstyle Gallery 随机发型图库"}
 WEB_DIRECTORY = "./web"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]

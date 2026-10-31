@@ -2,6 +2,11 @@
 (function(root){
   'use strict';
   const EN = {
+  "本次随机发型预览": "Random hairstyle preview",
+  "随机发型预览加载失败，请检查素材原图。": "The random preview could not load. Check the original image.",
+  "上次运行结果": "Last execution result",
+  "运行工作流后自动抽取发型": "A hairstyle is drawn automatically when the workflow runs",
+  "随机来源": "Random source",
   "AI 假人发型参考库 · HAIRSTYLE Atlas": "AI Mannequin Hairstyle Gallery · HAIRSTYLE Atlas",
   "HAIRSTYLE Atlas 首页": "HAIRSTYLE Atlas home",
   "跳到发型图库": "Skip to hairstyle gallery",

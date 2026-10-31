@@ -25,6 +25,18 @@ Filter by length and style, or search English, Chinese, and Japanese names, hair
 
 The default library is the node's `library/` directory. This machine stores its data at `/media/wwhvw/备份/comfyui/发型/`; the installed node and container-visible mirror share image files through hard links. The repository includes a ready-to-use `library/`. To use a different copy, set `COMFYUI_HAIRSTYLE_GALLERY_LIBRARY` to a complete library path visible inside the ComfyUI environment/container.
 
+## Automatic random selection: a separate node
+
+Add **image → Hairstyle Gallery → Random Hairstyle Gallery**. Connect its `image` output to your workflow or Preview Image, then run. It draws automatically on every execution, without a random button. Set `origin` to `all`, `builtin`, or `user`; `language` supports Chinese and English. Gallery filters do not affect this pool.
+
+Its eight outputs match the original selector and all describe the same actual image. The executed ID and preview appear on the node after each run. Saved preview metadata does not influence the next draw.
+
+The original **Hairstyle Gallery** retains its inputs, fixed-selection behavior, outputs and workflow compatibility. To freeze a random result, copy its `hairstyle_id` into the original selector. Missing originals are skipped; an empty usable source raises a clear error. Random draws may repeat by chance. The node does not start or enqueue tasks itself.
+
+Import [`example_workflows/random_hairstyle_preview.json`](example_workflows/random_hairstyle_preview.json) and run repeatedly to inspect results. A matching API graph is included.
+
+![Separate random node and execution result](docs/random-node-en.png)
+
 ## Upload one custom hairstyle
 
 1. Click **Upload hairstyle** in either the standalone gallery or the gallery opened from a node.
@@ -122,6 +134,7 @@ node tests/test_core.cjs
 node tests/test_i18n.cjs
 node --check web/app.mjs
 node --check web/hairstyle_gallery.js
+node --test tests/test_random_frontend.cjs
 ```
 
 Source portraits: [AI Model Face Database](https://ai-portrait-gallery.pages.dev/) by [Agi](https://x.com/agi_aibusi). This is an independent generation and organization tool, not an official release or endorsement. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the preserved source notice. Independent program code is MIT-licensed; this does not change third-party material or model terms.

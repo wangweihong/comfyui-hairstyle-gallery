@@ -1,0 +1,82 @@
+{
+  "random_runs": [
+    {
+      "prompt_id": "6eb1df99-4bad-41ae-8c9b-b27ec71dad25",
+      "source": "all",
+      "selected_id": "h-ff297594750",
+      "name": "湿发感短波波（长刘海）",
+      "cached_nodes": [],
+      "dimensions": [
+        1072,
+        1344
+      ]
+    },
+    {
+      "prompt_id": "f1c6ba21-9779-4c4e-b003-c550d967b436",
+      "source": "all",
+      "selected_id": "h-f34d264eee3",
+      "name": "圆弧短波波（空气刘海·深棕色）",
+      "cached_nodes": [],
+      "dimensions": [
+        1072,
+        1344
+      ]
+    },
+    {
+      "prompt_id": "6fe651ca-af8b-4a5f-a42f-b3a66253e7f2",
+      "source": "all",
+      "selected_id": "h-fb18208d42e",
+      "name": "外翘波波（深发色）",
+      "cached_nodes": [],
+      "dimensions": [
+        1072,
+        1344
+      ]
+    },
+    {
+      "prompt_id": "bc0dac2c-76b5-4869-9ff4-536ff4db8eb8",
+      "source": "builtin",
+      "selected_id": "h-fed79488beb",
+      "name": "露耳利落短发（无刘海）",
+      "cached_nodes": [],
+      "dimensions": [
+        1072,
+        1344
+      ]
+    },
+    {
+      "prompt_id": "2b290bec-482b-428b-b575-106a19fc5421",
+      "source": "user",
+      "selected_id": "u-a540ce3791044813a05bc94a89a559de",
+      "name": "自定义示例·迷你波波",
+      "cached_nodes": [],
+      "dimensions": [
+        1072,
+        1344
+      ]
+    }
+  ],
+  "fixed_runs": [
+    {
+      "prompt_id": "7f8f0848-7aa7-4298-8dd7-c4ce663dce01",
+      "cached_nodes": []
+    },
+    {
+      "prompt_id": "7945d17a-2e71-47c4-8262-ff7fb3e6edb6",
+      "cached_nodes": [
+        "1",
+        "2"
+      ]
+    }
+  ],
+  "python_tests": 21,
+  "frontend_tests": 3,
+  "original_node_source_unchanged": true,
+  "ui_repeated_runs_verified": true,
+  "ui_english_output_verified": true,
+  "ui_chinese_output_verified": true,
+  "screenshots": [
+    "docs/random-node.png",
+    "docs/random-node-en.png"
+  ]
+}
