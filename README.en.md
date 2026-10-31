@@ -12,7 +12,7 @@ There are 54 distinct name labels: 744 images retain detailed source style names
 
 ## Installation and browsing
 
-Clone this repository inside `ComfyUI/custom_nodes/`. It includes all893 full-size PNGs, previews, thumbnails and names (about1.87 GiB); no separate ZIP is needed. Install dependencies with ComfyUI's Python, restart ComfyUI, and refresh the browser.
+Clone this repository inside `ComfyUI/custom_nodes/`. It includes all 893 full-size PNGs, previews, thumbnails and names (about 1.87 GiB); no separate ZIP is needed. Install dependencies with ComfyUI's Python, restart ComfyUI, and refresh the browser.
 
 ```bash
 git clone https://github.com/wangweihong/comfyui-hairstyle-gallery.git

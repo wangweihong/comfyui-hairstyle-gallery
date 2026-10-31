@@ -6,5 +6,9 @@ requires-python = ">=3.10"
 dependencies = ["Pillow", "numpy", "torch", "aiohttp"]
 license = { text = "MIT (independent code only; see third-party material notices)" }
 
+[project.urls]
+Repository = "https://github.com/wangweihong/comfyui-hairstyle-gallery"
+Issues = "https://github.com/wangweihong/comfyui-hairstyle-gallery/issues"
+
 [tool.comfy]
 DisplayName = "Hairstyle Gallery 发型图库"
