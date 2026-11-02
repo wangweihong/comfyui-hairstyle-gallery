@@ -140,3 +140,5 @@ node --test tests/test_random_frontend.cjs
 ```
 
 来源人物素材为 [AI モデル顔データベース](https://ai-portrait-gallery.pages.dev/)，原作者 [あぎ](https://x.com/agi_aibusi)。本项目为独立生成与整理工具，来源和适用范围见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。独立程序代码适用MIT许可。
+
+发型仍使用现有 `name` 输出，不新增重复端口。固定与随机节点的 `name`、`description` 和 `hair_length` 按 `language=zh/en` 输出；随机预览名称也会即时切换。图库 GitHub 链接已指向本仓库。

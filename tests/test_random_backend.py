@@ -71,4 +71,15 @@ class RandomNodeTests(unittest.TestCase):
         first=old().load_hairstyle(self.builtin['id']);second=old().load_hairstyle(self.builtin['id'])
         self.assertIsInstance(first,tuple);self.assertEqual(first[3:],second[3:]);self.assertTrue(first[0].equal(second[0]));self.assertEqual(self.node.RETURN_NAMES,old.RETURN_NAMES)
 
+    def test_existing_name_socket_and_other_text_outputs_follow_language(self):
+        node=self.module.HairstyleGallery
+        self.assertEqual(node.RETURN_NAMES,('image','width','height','hairstyle_id','name','description','hair_length','source_id'))
+        for load in (lambda lang:node().load_hairstyle(self.builtin['id'],lang),lambda lang:self.node().load_random('builtin',lang)['result']):
+            zh,en=load('zh'),load('en')
+            self.assertEqual(en[4],'Short hairstyle');self.assertEqual(zh[4],'短发发型')
+            for index in (4,5,6):self.assertNotRegex(en[index],r'[\u3400-\u9fff]')
+            self.assertEqual(len(en),8);self.assertEqual(zh[1:4],en[1:4]);self.assertTrue(zh[0].equal(en[0]))
+        self.assertEqual(node().load_hairstyle(self.custom['id'],'en')[4],'My blue hair')
+
+
 if __name__=='__main__':unittest.main()

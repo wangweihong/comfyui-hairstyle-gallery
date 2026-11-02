@@ -212,6 +212,11 @@
       for(const [el,key,value] of attrs)if(el.isConnected)el.setAttribute(key,translate(value,language));
     };
   }
-  const api={translate,normalize,preferred,persist,captureStatic,EN,LANGUAGE_KEY};
+ let catalogPromise;
+ function loadCatalog(url){
+  if(!catalogPromise)catalogPromise=fetch(url).then(response=>{if(!response.ok)throw Error('Cannot load catalog');return response.json();}).catch(error=>{catalogPromise=null;throw error;});
+  return catalogPromise;
+ }
+  const api={loadCatalog,translate,normalize,preferred,persist,captureStatic,EN,LANGUAGE_KEY};
   if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.HairstyleI18n=api;
 })(typeof window!=='undefined'?window:globalThis);

@@ -138,3 +138,5 @@ node --test tests/test_random_frontend.cjs
 ```
 
 Source portraits: [AI Model Face Database](https://ai-portrait-gallery.pages.dev/) by [Agi](https://x.com/agi_aibusi). This is an independent generation and organization tool, not an official release or endorsement. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the preserved source notice. Independent program code is MIT-licensed; this does not change third-party material or model terms.
+
+Hairstyles continue to use the existing `name` output; no duplicate socket is added. Both fixed and random nodes localize `name`, `description`, and `hair_length` using `language=zh/en`. Random preview names switch immediately as well. The gallery GitHub link points to this repository.

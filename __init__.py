@@ -101,7 +101,8 @@ class RandomHairstyleGallery(HairstyleGallery):
     def load_random(self, origin="all", language="zh"):
         selected = random.choice(self._candidates(origin, language))
         result = super().load_hairstyle(selected["id"], language)
-        return {"ui": {"hairstyle_id": [result[3]], "name": [result[4]]}, "result": result}
+        row = hairstyle(selected["id"])
+        return {"ui": {"hairstyle_id": [result[3]], "name": [result[4]], "name_zh": [row["name_zh"]], "name_en": [row["name_en"]]}, "result": result}
 
 
 routes = PromptServer.instance.routes

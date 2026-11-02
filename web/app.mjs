@@ -179,7 +179,7 @@
     $('#viewer-position').textContent=`${fmt(index+1)} / ${fmt(viewerList.length)}`;
     $('#viewer-meta').innerHTML=[['参考类型',section(item)],['发型长度',hair(item)],['来源编号',item.source_id||'—'],['原图尺寸',item.w+' × '+item.h],['文件大小',mb(item.bytes)]].map(([key,value])=>`<dt>${escape(t(key))}</dt><dd>${escape(value)}</dd>`).join('');
     $('#viewer-original-style').hidden=item.origin==='user';
-    $('#viewer-original-style').textContent=item.origin==='user'?'':item.style?t('原始日文名称：{name}',{name:item.style}):t('原始素材没有细分发型名称，以发长类别命名。');
+    $('#viewer-original-style').textContent=item.origin==='user'?'':item.style?(language==='en'?'Style: '+item.name_en:t('原始日文名称：{name}',{name:item.style})):t('原始素材没有细分发型名称，以发长类别命名。');
     $('.viewer-source').textContent=item.origin==='user'?t('用户上传：{filename}\n上传时间：{time}',{filename:item.original_filename,time:new Date(item.uploaded_at).toLocaleString(language==='en'?'en-US':'zh-CN',{timeZoneName:'short'})}):t('FLUX.2 Klein 生成的假人发型')+'\n'+t('人物来源：あぎ 的人像数据库');
     $('#viewer-download').href=item.full;$('#viewer-download').download=item.id+'.png';$('#viewer-open').href=item.full;
     $('#viewer-prev').disabled=index===0;$('#viewer-next').disabled=index===viewerList.length-1;
