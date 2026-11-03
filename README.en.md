@@ -44,7 +44,7 @@ Import [`example_workflows/random_hairstyle_preview.json`](example_workflows/ran
 3. Click **Save to gallery**. On success, the gallery switches to Custom, clears filters, and opens the new image viewer.
 4. Click **Use hairstyle → ComfyUI** to update the current node. Neither uploading nor selecting queues a workflow.
 
-Static PNG, JPEG, and WebP are supported, one image at a time, up to 20 MiB and 32 megapixels. The server validates actual image content, normalizes the full image to PNG while preserving dimensions and transparency, and creates white-background previews and thumbnails. **Import does not extract hair or remove faces.** This first version does not include batch import, editing, deletion, or automatic extraction.
+Static PNG, JPEG, and WebP are supported, one image at a time, up to 20 MiB and 32 megapixels. The server validates actual image content, normalizes the full image to PNG while preserving dimensions and transparency, and creates white-background previews and thumbnails. **Import does not extract hair or remove faces.** Custom uploads do not yet support batch import, editing, deletion, or automatic extraction. Built-in assets can be deleted or replaced using Edit.
 
 Custom assets default to **`ComfyUI/user/hairstyle_gallery/`**, separate from node code and bundled assets:
 
@@ -140,3 +140,15 @@ node --test tests/test_random_frontend.cjs
 Source portraits: [AI Model Face Database](https://ai-portrait-gallery.pages.dev/) by [Agi](https://x.com/agi_aibusi). This is an independent generation and organization tool, not an official release or endorsement. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the preserved source notice. Independent program code is MIT-licensed; this does not change third-party material or model terms.
 
 Hairstyles continue to use the existing `name` output; no duplicate socket is added. Both fixed and random nodes localize `name`, `description`, and `hair_length` using `language=zh/en`. Random preview names switch immediately as well. The gallery GitHub link points to this repository.
+
+## Delete and replace built-in assets
+
+- Click **Edit**, select cards and choose **Delete selected assets**. Existing filters and select-all apply to the current results. Assets are independent; matching names or source IDs are never grouped. Custom uploads are excluded.
+- **Delete** and **Replace** appear below **Open in new window** in the viewer. Deletion removes the asset files and frees storage. Replacement accepts static PNG/JPEG/WebP, up to 20 MiB and 32 megapixels, preserves the ID and metadata, and updates all image derivatives.
+- **Manage built-in assets** is only for handling earlier changes after a plugin update. Choose independently whether to repeat deletions and use replacement images, then **Apply**. No image selection is needed. Reports include deleted, replaced, kept and failed assets. Keeping built-ins stops the matching earlier action; missing restored files produce an error and retain the record for retry.
+
+Startup, browsing and updates never automatically delete or replace files. Records live in `ComfyUI/user/hairstyle_gallery/data/builtin_changes.json`; replacement sources live in `ComfyUI/user/hairstyle_gallery/replacements/<id>/<revision>/`. Back up both. Clients of the same service share these files. Replacement sources and older revisions are retained. Working-tree deletion does not remove Git history objects.
+
+Deleted IDs produce clear errors in fixed workflows and are excluded from random sampling. Replacements keep IDs and update node images. Operations are restricted to registered built-in paths and reject symlinks and path traversal. Restart ComfyUI after deployment and refresh the page. New controls remain hidden until their backend is available.
+
+API: `GET /hairstyle_gallery/manage/summary`; `POST /hairstyle_gallery/manage/plan` with `{ids, mode}` or `{choices: {deleted: "delete" / "keep", replaced: "replace" / "keep"}}`; `POST /hairstyle_gallery/manage/apply` with `{request, token}`; multipart `POST /hairstyle_gallery/manage/replacement` with `id` and `image`.

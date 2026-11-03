@@ -142,3 +142,15 @@ node --test tests/test_random_frontend.cjs
 来源人物素材为 [AI モデル顔データベース](https://ai-portrait-gallery.pages.dev/)，原作者 [あぎ](https://x.com/agi_aibusi)。本项目为独立生成与整理工具，来源和适用范围见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。独立程序代码适用MIT许可。
 
 发型仍使用现有 `name` 输出，不新增重复端口。固定与随机节点的 `name`、`description` 和 `hair_length` 按 `language=zh/en` 输出；随机预览名称也会即时切换。图库 GitHub 链接已指向本仓库。
+
+## 删除和替换内置素材
+
+- 点击图库顶部 **编辑**，直接勾选卡片，再点击 **删除选中素材**。可以使用原有分类和搜索筛选，也可以全选当前结果；每张素材独立处理，不按名称或来源编号合组。自定义上传不参与内置素材管理。
+- 大图中 **新窗口打开** 下方直接提供 **删除**、**替换**。删除会移除该素材的图片文件并释放空间；替换支持静态 PNG/JPEG/WebP，最多 20 MiB、3200 万像素，保留 ID 和分类等信息，同时更新预览与缩略图。
+- 顶部 **管理内置素材** 只用于更新后的全局处理，不需要重新选图。分别决定以前删除的素材是否继续删除、以前替换的素材是否继续使用替换图，点击 **执行** 后显示删除、替换、保留和失败数量。选择保留内置素材会停止对应的后续操作；文件尚未恢复时会报告失败并保留处理记录，供更新素材后重试。
+
+启动、浏览或更新后都不会自动删除或替换。记录保存在 `ComfyUI/user/hairstyle_gallery/data/builtin_changes.json`，替换源文件保存在 `ComfyUI/user/hairstyle_gallery/replacements/<id>/<revision>/`，备份时一起保存。同一服务的客户端共享这些数据。替换源和历史版本会保留；删除工作目录图片不会清理 Git 历史对象。
+
+已删除 ID 在固定工作流中会明确报错，并被随机节点跳过；替换沿用原 ID，节点读取新图片。接口只处理登记的内置素材，拒绝符号链接和越界路径。部署后重启 ComfyUI、刷新页面启用新接口；接口尚未加载时新入口隐藏，不影响原有浏览功能。
+
+开发接口：`GET /hairstyle_gallery/manage/summary`；`POST /hairstyle_gallery/manage/plan` 接受 `{ids, mode}` 或 `{choices: {deleted: "delete" / "keep", replaced: "replace" / "keep"}}`；`POST /hairstyle_gallery/manage/apply` 接受 `{request, token}`；`POST /hairstyle_gallery/manage/replacement` 接受 multipart `id`、`image`。

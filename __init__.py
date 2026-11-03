@@ -15,6 +15,7 @@ from server import PromptServer
 
 from .catalog import ROOT, USER_LIBRARY, records, hairstyle, asset, browser_payload
 from .uploads import import_image, UploadError, MAX_BYTES
+from . import management
 
 
 class HairstyleGallery:
@@ -75,11 +76,14 @@ class RandomHairstyleGallery(HairstyleGallery):
         for row in records():
             if origin != "all" and row["origin"] != origin:
                 continue
-            try:
-                asset("full", Path(row["full"]).name)
-            except FileNotFoundError:
+            if row.get("management_state") == "thumb_only":
                 continue
-            available.append(row)
+            root = management.catalog.USER_LIBRARY if row["origin"] == "user" else management.catalog.LIBRARY
+            target = (root / row["full"]).resolve()
+            if not target.is_relative_to(root):
+                raise ValueError("Original image path escapes the library")
+            if target.is_file():
+                available.append(row)
         if not available:
             raise ValueError("No available hairstyle originals in this source. Install the library, upload a reference, or change the source."
                              if language == "en" else "当前来源没有可用发型原图，请安装素材库、上传参考图或切换来源。")
@@ -111,7 +115,7 @@ routes = PromptServer.instance.routes
 @routes.get("/hairstyle_gallery/catalog")
 async def catalog_route(request):
     try:
-        return web.json_response(records())
+        return web.json_response(records(availability=True), headers={"Cache-Control":"no-store"})
     except (ValueError, FileNotFoundError) as exc:
         return web.json_response({"error": str(exc)}, status=503)
 
@@ -180,7 +184,7 @@ async def data_route(request):
 async def asset_route(request):
     try:
         return web.FileResponse(asset(request.match_info["kind"], request.match_info["filename"]),
-                                headers={"Cache-Control": "private, max-age=3600", "X-Content-Type-Options": "nosniff"})
+                                headers={"Cache-Control": "private, no-cache", "X-Content-Type-Options": "nosniff"})
     except (ValueError, FileNotFoundError):
         raise web.HTTPNotFound()
 
@@ -188,7 +192,7 @@ async def asset_route(request):
 @routes.get("/hairstyle_gallery/ui/{filename}")
 async def ui_route(request):
     name = request.match_info["filename"]
-    if name not in ("style.css", "core.mjs", "app.mjs", "i18n.mjs", "icon.svg"):
+    if name not in ("style.css", "core.mjs", "app.mjs", "i18n.mjs", "icon.svg", "library_manager.mjs", "library_manager.css", "asset_editor.mjs"):
         raise web.HTTPNotFound()
     return web.FileResponse(ROOT / "web" / name, headers={"Cache-Control": "no-cache"})
 
@@ -202,3 +206,99 @@ NODE_CLASS_MAPPINGS = {"HairstyleGallery": HairstyleGallery, "RandomHairstyleGal
 NODE_DISPLAY_NAME_MAPPINGS = {"HairstyleGallery": "Hairstyle Gallery 发型图库", "RandomHairstyleGallery": "Random Hairstyle Gallery 随机发型图库"}
 WEB_DIRECTORY = "./web"
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS", "WEB_DIRECTORY"]
+
+
+async def management_response(function, *args, **kwargs):
+    try:
+        result = await asyncio.to_thread(function, *args, **kwargs)
+        return web.json_response(result, headers={"Cache-Control": "no-store"})
+    except (management.ManagementError, UploadError) as exc:
+        return web.json_response({"error": exc.code}, status=exc.status)
+    except (ValueError, TypeError, KeyError):
+        return web.json_response({"error": "invalid_management_data"}, status=400)
+    except OSError:
+        logging.exception("Unable to manage pose library")
+        return web.json_response({"error": "storage_error"}, status=500)
+
+
+async def management_json(request):
+    data = bytearray()
+    async for chunk in request.content.iter_chunked(8192):
+        data.extend(chunk)
+        if len(data) > 256 * 1024:
+            raise management.ManagementError("invalid_request", 413)
+    try:
+        value = json.loads(data)
+    except (ValueError, UnicodeError) as exc:
+        raise management.ManagementError("invalid_request") from exc
+    if not isinstance(value, dict):
+        raise management.ManagementError("invalid_request")
+    return value
+
+
+@routes.get("/hairstyle_gallery/manage")
+async def management_status_route(request):
+    return await management_response(management.library_status)
+
+
+@routes.get("/hairstyle_gallery/manage/summary")
+async def management_summary_route(request):
+    return await management_response(management.update_summary)
+
+
+@routes.post("/hairstyle_gallery/manage/plan")
+async def management_plan_route(request):
+    try:
+        data = await management_json(request)
+    except management.ManagementError as exc:
+        return web.json_response({"error": exc.code}, status=exc.status)
+    if set(data) - {"ids", "mode", "choices"}:
+        return web.json_response({"error": "invalid_request"}, status=400)
+    return await management_response(management.make_plan, **data)
+
+
+@routes.post("/hairstyle_gallery/manage/apply")
+async def management_apply_route(request):
+    try:
+        data = await management_json(request)
+    except management.ManagementError as exc:
+        return web.json_response({"error": exc.code}, status=exc.status)
+    if set(data) != {"request", "token"}:
+        return web.json_response({"error": "invalid_request"}, status=400)
+    return await management_response(management.apply_plan, data["request"], data["token"])
+
+
+@routes.post("/hairstyle_gallery/manage/replacement")
+async def management_replacement_route(request):
+    try:
+        multipart = await request.multipart()
+        data, identity = None, None
+        async for part in multipart:
+            limit = MAX_BYTES if part.name == "image" else 80
+            if part.name not in ("image", "id") or (part.name == "image" and data is not None) or (part.name == "id" and identity is not None):
+                raise management.ManagementError("invalid_request")
+            content = bytearray()
+            while chunk := await part.read_chunk():
+                content.extend(chunk)
+                if len(content) > limit:
+                    raise UploadError("file_too_large", 413) if part.name == "image" else management.ManagementError("invalid_request")
+            if part.name == "image":
+                data = bytes(content)
+            else:
+                identity = content.decode("utf-8")
+        if data is None or identity is None:
+            raise management.ManagementError("invalid_request")
+    except (management.ManagementError, UploadError) as exc:
+        return web.json_response({"error": exc.code}, status=exc.status)
+    except (ValueError, UnicodeError, AssertionError):
+        return web.json_response({"error": "invalid_request"}, status=400)
+    return await management_response(management.stage_replacement, identity, data)
+
+
+
+@routes.get("/hairstyle_gallery/meta")
+async def metadata_route(request):
+    try:
+        return web.json_response(browser_payload()["meta"], headers={"Cache-Control":"no-store"})
+    except (ValueError, OSError):
+        return web.json_response({"error":"storage_error"},status=503)

@@ -30,6 +30,7 @@
   const savedFavorites = stored('hairstyle-atlas-favorites-v1', []);
   const favorites = new Set(Array.isArray(savedFavorites) ? savedFavorites.filter(id => byId.has(id)) : []);
   const state = {...readState(location.hash, records), limit:40};
+  let editor;
   let filtered = [], shown = 0, rankCategory = ranking.cats[0], viewerList = [], viewerIndex = -1, imageVersion = 0, lastFocus = null, toastTimer;
   let selectedId = '';
   const viewer = $('#viewer');
@@ -113,7 +114,7 @@
   function showMore() {
     const next = Math.min(shown+state.limit, filtered.length);
     $('#grid').insertAdjacentHTML('beforeend', filtered.slice(shown,next).map(card).join(''));
-    shown = next;updateResult();
+    shown = next;updateResult();editor?.paint();
   }
   function render(updateURL=true) {
     filtered = filterRecords(records,state,favorites);
@@ -185,7 +186,7 @@
     $('#viewer-prev').disabled=index===0;$('#viewer-next').disabled=index===viewerList.length-1;
     $('#use-hairstyle').disabled = window.parent === window;
     $('#use-hairstyle').textContent = t(window.parent === window ? '请从 ComfyUI 节点打开以使用发型' : '使用此发型 → ComfyUI');
-    updateViewerFavorite();writeURL(item.id);
+    updateViewerFavorite();writeURL(item.id);editor?.paint();
   }
   function openViewer(list,index) {
     if(!list[index])return;lastFocus=document.activeElement;viewerList=[...list];
@@ -306,7 +307,7 @@
   });
 
   function setLanguage(value,notify=true){
-    language=I18N.normalize(value);I18N.persist(language);applyStatic(language);
+    language=I18N.normalize(value);editor?.setLanguage(language);I18N.persist(language);applyStatic(language);
     const url=new URL(location.href);url.searchParams.set('lang',language);history.replaceState(null,'',url.pathname+url.search+url.hash);
     $('#language').value=language;$('#viewer-language').value=language;$('.brand-language').textContent=language==='en'?'EN':'中文';
     document.querySelectorAll('[data-total]').forEach(el=>el.textContent=fmt(meta.total));
@@ -325,6 +326,19 @@
   $('#viewer-language').addEventListener('change',event=>setLanguage(event.target.value));
   window.addEventListener('message',event=>{
     if(event.origin===location.origin&&event.source===window.parent&&event.data?.type==='hairstyle-gallery-language'&&['zh','en'].includes(event.data.language))setLanguage(event.data.language,false);
+  });
+  editor=window.GalleryAssetEditor.mount({
+    language,toolbar:$('.nav'),feedback:$('.controls-inner'),grid:$('#grid'),cardSelector:'.hairstyle-card',openLink:$('#viewer-open'),
+    translate:(value,lang)=>I18N.translate(value,lang),records:()=>records,visible:()=>filtered,current:()=>viewer.open?viewerList[viewerIndex]:null,
+    async reload({keepId}={}){
+      closeViewer();
+      const [rows,stats]=await Promise.all([fetch('catalog',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error();return r.json();}),fetch('meta',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error();return r.json();})]);
+      records=rows.map(row=>({...row,...Object.fromEntries(['full','preview','thumb'].filter(key=>row[key]).map(key=>[key,`assets/${key}/${row.id}${key==='full'?'.png':'.webp'}${row.asset_version?'?v='+encodeURIComponent(row.asset_version):''}`]))}));meta=stats;
+      byId.clear();records.forEach(row=>byId.set(row.id,row));
+      setLanguage(language,false);
+      if(keepId){const list=filtered.some(row=>row.id===keepId)?filtered:records;openViewer(list,list.findIndex(row=>row.id===keepId));}
+      window.parent.postMessage({type:'hairstyle-gallery-library-changed'},location.origin);
+    }
   });
   setLanguage(language,false);
   if (window.parent !== window) window.parent.postMessage({type:'hairstyle-gallery-ready'}, location.origin);
