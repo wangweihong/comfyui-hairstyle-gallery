@@ -41,7 +41,7 @@
   },
   "RandomHairstyleGallery": {
     "display_name": "Random Hairstyle Gallery",
-    "description": "Draw a new reference on every workflow execution, independently of the original selector.",
+    "description": "Click the dice to preview a random hairstyle. Lock the selection to keep it for workflow runs.",
     "inputs": {
       "origin": {
         "name": "Random source",
@@ -50,6 +50,14 @@
       "language": {
         "name": "UI / text language",
         "tooltip": "zh: Chinese; en: English. Changes the interface, name, description, and hair-length text."
+      },
+      "hairstyle_id": {
+        "name": "Current hairstyle ID",
+        "tooltip": "The selected reference. Workflow runs keep this image while locked."
+      },
+      "locked": {
+        "name": "Lock random selection",
+        "tooltip": "Keep the current selection and disable the dice."
       }
     },
     "outputs": {

@@ -63,10 +63,14 @@ class RandomHairstyleGallery(HairstyleGallery):
         return {"required": {"origin": (["all", "builtin", "user"], {"default": "all",
                     "tooltip": "随机范围：全部 / 内置 / 自定义。Random pool: all / built-in / custom."})},
                 "optional": {"language": (["zh", "en"], {"default": "zh",
-                    "tooltip": "界面与文本输出语言 / UI and text output language"})}}
+                    "tooltip": "界面与文本输出语言 / UI and text output language"}),
+                    "hairstyle_id": ("STRING", {"default": "", "multiline": False,
+                        "tooltip": "骰子当前选中的发型；锁定后使用此图。Current dice selection; used while locked."}),
+                    "locked": ("BOOLEAN", {"default": False,
+                        "tooltip": "锁定当前发型，点击骰子和运行工作流都不再随机。Keep this selection for dice clicks and workflow runs."})}}
 
     FUNCTION = "load_random"
-    DESCRIPTION = "每次运行工作流时，自动从可用原图中随机抽取一个发型；输出与原发型图库相同的八项结果。"
+    DESCRIPTION = "点击骰子即可随机预览，无需运行工作流；锁定后固定当前发型，解锁后每次运行重新随机。"
 
     @classmethod
     def _candidates(cls, origin="all", language="zh"):
@@ -76,7 +80,7 @@ class RandomHairstyleGallery(HairstyleGallery):
         for row in records():
             if origin != "all" and row["origin"] != origin:
                 continue
-            if row.get("management_state") == "thumb_only":
+            if row.get("management_state") in ("thumb_only", "removed"):
                 continue
             root = management.catalog.USER_LIBRARY if row["origin"] == "user" else management.catalog.LIBRARY
             target = (root / row["full"]).resolve()
@@ -90,26 +94,56 @@ class RandomHairstyleGallery(HairstyleGallery):
         return available
 
     @classmethod
-    def VALIDATE_INPUTS(cls, origin="all", language="zh"):
+    def VALIDATE_INPUTS(cls, origin="all", language="zh", hairstyle_id="", locked=False):
+        if locked:
+            if not hairstyle_id:
+                return "Draw a hairstyle before locking" if language == "en" else "请先点击骰子选择发型，再锁定"
+            return super().VALIDATE_INPUTS(hairstyle_id, language)
         try:
             cls._candidates(origin, language)
-        except (ValueError, FileNotFoundError) as exc:
+        except (ValueError, OSError) as exc:
             return str(exc)
         return True
 
     @classmethod
-    def IS_CHANGED(cls, origin="all", language="zh"):
+    def IS_CHANGED(cls, origin="all", language="zh", hairstyle_id="", locked=False):
+        if locked:
+            return super().IS_CHANGED(hairstyle_id, language)
         # Fresh on every queued prompt, without NaN in saved prompt metadata.
         return uuid.uuid4().hex
 
-    def load_random(self, origin="all", language="zh"):
-        selected = random.choice(self._candidates(origin, language))
+    @staticmethod
+    def preview_data(selected, language="zh"):
+        row = management.catalog.localized(dict(selected), origin=selected.get("origin", "builtin"))
+        return {"hairstyle_id": row["id"], "name": row["name_en"] if language == "en" else row["name_zh"],
+                "name_zh": row["name_zh"], "name_en": row["name_en"]}
+
+    def load_random(self, origin="all", language="zh", hairstyle_id="", locked=False):
+        if locked:
+            if not hairstyle_id:
+                raise ValueError("Draw a hairstyle before locking" if language == "en" else "请先点击骰子选择发型，再锁定")
+            selected = hairstyle(hairstyle_id)
+        else:
+            selected = random.choice(self._candidates(origin, language))
         result = super().load_hairstyle(selected["id"], language)
-        row = hairstyle(selected["id"])
-        return {"ui": {"hairstyle_id": [result[3]], "name": [result[4]], "name_zh": [row["name_zh"]], "name_en": [row["name_en"]]}, "result": result}
+        return {"ui": {key: [value] for key, value in self.preview_data(selected, language).items()}, "result": result}
 
 
 routes = PromptServer.instance.routes
+
+
+@routes.get('/hairstyle_gallery/random')
+async def random_preview_route(request):
+    """Select metadata only; never enqueue a prompt or load an image tensor."""
+    query = request.query
+    try:
+        def select():
+            candidates = RandomHairstyleGallery._candidates(query.get('origin', 'all'), query.get('language', 'zh'))
+            alternatives = [row for row in candidates if row['id'] != query.get('exclude_id')]
+            return RandomHairstyleGallery.preview_data(random.choice(alternatives or candidates), query.get('language', 'zh'))
+        return web.json_response(await asyncio.to_thread(select), headers={"Cache-Control": "no-store"})
+    except (ValueError, OSError) as exc:
+        return web.json_response({'error': str(exc)}, status=400, headers={"Cache-Control": "no-store"})
 
 
 @routes.get("/hairstyle_gallery/catalog")

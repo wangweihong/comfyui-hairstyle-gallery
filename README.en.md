@@ -27,11 +27,15 @@ The default library is the node's `library/` directory. This machine stores its 
 
 ## Automatic random selection: a separate node
 
-Add **image → Hairstyle Gallery → Random Hairstyle Gallery**. Connect its `image` output to your workflow or Preview Image, then run. It draws automatically on every execution, without a random button. Set `origin` to `all`, `builtin`, or `user`; `language` supports Chinese and English. Gallery filters do not affect this pool.
+Add **image → Hairstyle Gallery → Random Hairstyle Gallery**. Connect its `image` output to your workflow or Preview Image, then run. It draws automatically on every execution while unlocked. Set `origin` to `all`, `builtin`, or `user`; `language` supports Chinese and English. Gallery filters do not affect this pool.
 
-Its eight outputs match the original selector and all describe the same actual image. The executed ID and preview appear on the node after each run. Saved preview metadata does not influence the next draw.
+Its eight outputs match the original selector and all describe the same actual image. The current name, ID and preview appear after a dice click or workflow run.
 
-The original **Hairstyle Gallery** retains its inputs, fixed-selection behavior, outputs and workflow compatibility. To freeze a random result, copy its `hairstyle_id` into the original selector. Missing originals are skipped; an empty usable source raises a clear error. Random draws may repeat by chance. The node does not start or enqueue tasks itself.
+The original **Hairstyle Gallery** retains its inputs, fixed-selection behavior, outputs and workflow compatibility. The random node can lock its current selection directly. Missing originals are skipped; an empty usable source raises a clear error. Random draws may repeat by chance. The node does not start or enqueue tasks itself.
+
+Click **🎲 Random** to draw and preview a hairstyle using the node's source filter, without running the workflow. The dice skips the current image when alternatives exist. Enable **🔒 Lock random selection** to disable the dice and keep the current `hairstyle_id` and all its outputs for subsequent runs. The workflow saves the lock and selected ID. Draw once before locking. Changing filters while locked keeps the selection; missing or cleaned originals raise an error rather than drawing a replacement.
+
+Unlock to restore automatic random draws on workflow runs, which may repeat by chance. An unlocked manual preview does not fix the next workflow draw. Missing or cleaned originals are excluded; an empty usable source raises an error. The node does not enqueue or start workflow tasks itself.
 
 Import [`example_workflows/random_hairstyle_preview.json`](example_workflows/random_hairstyle_preview.json) and run repeatedly to inspect results. A matching API graph is included.
 

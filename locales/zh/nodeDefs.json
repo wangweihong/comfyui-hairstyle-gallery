@@ -41,7 +41,7 @@
   },
   "RandomHairstyleGallery": {
     "display_name": "Random Hairstyle Gallery 随机发型图库",
-    "description": "每次运行自动从可用素材中抽取发型，不改变原发型图库节点。",
+    "description": "点击骰子随机预览发型，锁定后运行工作流保持当前发型。",
     "inputs": {
       "origin": {
         "name": "随机来源",
@@ -50,6 +50,14 @@
       "language": {
         "name": "界面与文本语言",
         "tooltip": "zh：中文；en：English。切换名称、描述和发型长度。"
+      },
+      "hairstyle_id": {
+        "name": "当前发型编号",
+        "tooltip": "当前选择的发型，锁定后运行工作流使用此图。"
+      },
+      "locked": {
+        "name": "锁定随机",
+        "tooltip": "保持当前选择并禁用骰子。"
       }
     },
     "outputs": {
