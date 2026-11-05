@@ -2,6 +2,8 @@
 
 [简体中文](README.md) · **English**
 
+Supports both the legacy canvas and **Nodes 2.0** (tested with ComfyUI frontend 1.57.4), including gallery selection, previews, dice and locking. Hard-refresh the browser after updating to load the new frontend scripts.
+
 An offline mannequin hairstyle gallery for ComfyUI. It follows Portrait Gallery's warm, responsive layout with filters, search, favorites, and large previews, so hairstyle references can be used separately from character identity.
 
 The collection contains **893 generated hairstyles**, extracted from the face-reference section of `comfyui-portrait-gallery`: 433 short, 229 medium, 154 medium-long, and 77 long. The source styling-photo section was not used. There are 2,679 image assets (full-size PNG, preview WebP, and thumbnail WebP), totaling about 1.87 GiB. Integrity checks passed; see `library/data/audit-report.json`.
